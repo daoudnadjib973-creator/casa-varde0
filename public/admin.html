@@ -1,0 +1,3540 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>لوحة التحكم — كازا فيردي</title>
+  <meta name="description" content="لوحة تحكم كازا فيردي الخاصة — إدارة المتجر." />
+
+  <!-- Google Fonts (same family set as the customer site) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@400;500;600;700;800&family=Noto+Naskh+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+  <style>
+    /* ============================================
+       DESIGN TOKENS
+       Core palette/fonts/radii/shadows reused as-is from
+       the customer site (index.html) for brand consistency.
+       Admin-only tokens are added below them for the more
+       functional, data-dense admin surface treatment.
+    ============================================ */
+    :root {
+      --green-900: #0f2318;
+      --green-800: #1a3a2e;
+      --green-700: #244d3c;
+      --green-600: #2d6048;
+      --green-400: #4a9c6a;
+      --green-100: #e8f4ed;
+      --green-50:  #f3faf5;
+
+      --red-700:   #9e0b1e;
+      --red-600:   #c8102e;
+      --red-100:   #fde8eb;
+
+      --gold-600:  #b8922a;
+      --gold-500:  #d4a853;
+      --gold-200:  #f0dfa8;
+      --gold-50:   #fdf9ee;
+
+      --white:     #ffffff;
+      --cream:     #faf8f4;
+      --gray-50:   #f6f5f2;
+      --gray-100:  #ede9e3;
+      --gray-200:  #d6d0c8;
+      --gray-400:  #a09888;
+      --gray-600:  #6b6155;
+      --gray-800:  #302820;
+      --black:     #1a1210;
+
+      --font-display: 'Playfair Display', 'Noto Naskh Arabic', Georgia, serif;
+      --font-ar:      'Noto Naskh Arabic', 'Playfair Display', serif;
+      --font-body:    'Inter', 'Noto Naskh Arabic', system-ui, sans-serif;
+
+      --radius-sm:  6px;
+      --radius-md:  12px;
+      --radius-lg:  20px;
+      --radius-full: 9999px;
+
+      --shadow-sm:  0 1px 3px rgba(15,35,24,0.08), 0 1px 2px rgba(15,35,24,0.06);
+      --shadow-md:  0 4px 16px rgba(15,35,24,0.10), 0 2px 6px rgba(15,35,24,0.07);
+      --shadow-lg:  0 12px 40px rgba(15,35,24,0.14), 0 4px 12px rgba(15,35,24,0.08);
+
+      --transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+
+      /* Admin-only surface tokens — a cooler, denser neutral than the
+         customer site's warm cream, so the dashboard reads as a distinct,
+         functional workspace rather than a copy of the storefront. */
+      --admin-bg:      #f3f1ec;
+      --admin-surface: #ffffff;
+      --admin-border:  #e4dfd5;
+      --amber-600:     #b8790f;
+      --amber-100:     #fbeed2;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { -webkit-text-size-adjust: 100%; }
+    body {
+      font-family: var(--font-ar);
+      background: var(--admin-bg);
+      color: var(--gray-800);
+      line-height: 1.55;
+      min-height: 100vh;
+    }
+    body.lang-fr { font-family: var(--font-body); }
+    button { font: inherit; color: inherit; background: none; border: none; cursor: pointer; }
+    ul { list-style: none; }
+    a { color: inherit; text-decoration: none; }
+    img { max-width: 100%; display: block; }
+    :focus-visible { outline: 3px solid var(--gold-600); outline-offset: 2px; }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { transition: none !important; animation: none !important; }
+    }
+
+    /* ============================================
+       SHELL LAYOUT
+       Flex row — logical properties + CSS `direction`
+       (inherited from the `dir` attribute) place the
+       sidebar on the correct side automatically for both
+       RTL (Arabic) and LTR (French), no per-language CSS.
+    ============================================ */
+    .admin-shell {
+      display: flex;
+      min-height: 100vh;
+    }
+
+    /* ---- Sidebar ---- */
+    .admin-sidebar {
+      width: 264px;
+      flex-shrink: 0;
+      background: var(--green-900);
+      color: var(--gray-50);
+      display: flex;
+      flex-direction: column;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow-y: auto;
+    }
+
+    .admin-brand {
+      display: flex;
+      align-items: center;
+      gap: 0.7rem;
+      padding: 1.4rem 1.3rem;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+    .admin-brand__mark {
+      width: 38px;
+      height: 38px;
+      border-radius: var(--radius-md);
+      background: linear-gradient(135deg, var(--gold-500), var(--gold-600));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-display);
+      font-weight: 700;
+      color: var(--green-900);
+      font-size: 1.15rem;
+      flex-shrink: 0;
+    }
+    .admin-brand__text {
+      display: flex;
+      flex-direction: column;
+      gap: 0.1rem;
+      min-width: 0;
+    }
+    .admin-brand__name {
+      font-family: var(--font-display);
+      font-weight: 700;
+      font-size: 1.02rem;
+      color: var(--white);
+      white-space: nowrap;
+    }
+    .admin-brand__sub {
+      font-size: 0.72rem;
+      color: var(--gold-200);
+      font-family: var(--font-body);
+      letter-spacing: 0.02em;
+    }
+
+    .admin-nav {
+      flex: 1;
+      padding: 0.9rem 0.8rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+    .admin-nav__btn {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      width: 100%;
+      padding: 0.75rem 0.85rem;
+      border-radius: var(--radius-md);
+      color: rgba(255,255,255,0.72);
+      font-size: 0.92rem;
+      font-weight: 600;
+      transition: background var(--transition), color var(--transition);
+      min-height: 46px;
+      text-align: start;
+    }
+    .admin-nav__btn:hover {
+      background: rgba(255,255,255,0.07);
+      color: var(--white);
+    }
+    .admin-nav__btn.active {
+      background: rgba(212,168,83,0.16);
+      color: var(--gold-200);
+    }
+    .admin-nav__btn svg { width: 19px; height: 19px; flex-shrink: 0; }
+
+    .admin-sidebar__footer {
+      padding: 1rem 1.3rem 1.3rem;
+      border-top: 1px solid rgba(255,255,255,0.08);
+    }
+    .admin-version-tag {
+      display: inline-block;
+      font-size: 0.68rem;
+      font-weight: 600;
+      color: var(--gold-200);
+      background: rgba(212,168,83,0.14);
+      border: 1px solid rgba(212,168,83,0.3);
+      border-radius: var(--radius-full);
+      padding: 0.3rem 0.7rem;
+      font-family: var(--font-body);
+      letter-spacing: 0.01em;
+    }
+
+    /* ---- Mobile drawer behaviour ---- */
+    .admin-sidebar__closebtn { display: none; }
+
+    @media (max-width: 1023px) {
+      .admin-sidebar {
+        position: fixed;
+        top: 0;
+        inset-inline-start: -290px;
+        width: 280px;
+        z-index: 60;
+        transition: inset-inline-start var(--transition);
+        box-shadow: var(--shadow-lg);
+      }
+      .admin-sidebar.open { inset-inline-start: 0; }
+      .admin-sidebar__closebtn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 34px;
+        height: 34px;
+        border-radius: var(--radius-md);
+        color: var(--white);
+        margin-inline-start: auto;
+      }
+      .admin-sidebar__closebtn svg { width: 18px; height: 18px; }
+    }
+
+    .admin-drawer-backdrop {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(15,35,24,0.45);
+      z-index: 55;
+    }
+    .admin-drawer-backdrop.open { display: block; }
+
+    /* ---- Main column ---- */
+    .admin-main {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .admin-topbar {
+      position: sticky;
+      top: 0;
+      z-index: 40;
+      display: flex;
+      align-items: center;
+      gap: 0.9rem;
+      padding: 0.9rem 1.5rem;
+      background: var(--admin-surface);
+      border-bottom: 1px solid var(--admin-border);
+    }
+    .admin-hamburger {
+      display: none;
+      width: 40px;
+      height: 40px;
+      border-radius: var(--radius-md);
+      align-items: center;
+      justify-content: center;
+      color: var(--green-800);
+      flex-shrink: 0;
+    }
+    .admin-hamburger:hover { background: var(--gray-50); }
+    .admin-hamburger svg { width: 21px; height: 21px; }
+
+    @media (max-width: 1023px) {
+      .admin-hamburger { display: flex; }
+    }
+
+    .admin-topbar__title {
+      font-family: var(--font-display);
+      font-weight: 700;
+      font-size: 1.15rem;
+      color: var(--green-900);
+      flex: 1;
+      min-width: 0;
+    }
+
+    .admin-lang-toggle {
+      display: flex;
+      background: var(--gray-50);
+      border-radius: var(--radius-full);
+      padding: 0.2rem;
+      flex-shrink: 0;
+    }
+    .admin-lang-toggle button {
+      padding: 0.35rem 0.85rem;
+      border-radius: var(--radius-full);
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: var(--gray-600);
+      transition: all var(--transition);
+    }
+    .admin-lang-toggle button.active {
+      background: var(--green-800);
+      color: var(--white);
+    }
+
+    .admin-content {
+      flex: 1;
+      padding: 1.6rem 1.5rem 3rem;
+      max-width: 1180px;
+      width: 100%;
+    }
+
+    .admin-view { display: none; }
+    .admin-view.active { display: block; }
+
+    .admin-page-subtitle {
+      color: var(--gray-600);
+      font-size: 0.92rem;
+      margin-bottom: 1.5rem;
+    }
+
+    /* ---- Data-provenance pill ----
+       The one recurring device across every screen: every number or
+       row is explicitly labeled as either mirrored from the live site
+       ("مباشر") or placeholder ("تجريبي"), so the owner never mistakes
+       demo content for a real order or a real setting. */
+    .data-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      font-size: 0.68rem;
+      font-weight: 700;
+      padding: 0.22rem 0.6rem;
+      border-radius: var(--radius-full);
+      font-family: var(--font-body);
+      letter-spacing: 0.01em;
+      white-space: nowrap;
+    }
+    .data-pill::before {
+      content: '';
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .data-pill--live {
+      background: var(--green-100);
+      color: var(--green-700);
+    }
+    .data-pill--live::before { background: var(--green-600); }
+    .data-pill--demo {
+      background: var(--amber-100);
+      color: var(--amber-600);
+    }
+    .data-pill--demo::before { background: var(--amber-600); }
+
+    /* ---- Stat cards (Dashboard home) ---- */
+    .stat-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+    .stat-card {
+      background: var(--admin-surface);
+      border: 1px solid var(--admin-border);
+      border-radius: var(--radius-lg);
+      padding: 1.2rem 1.3rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+    }
+    .stat-card__top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 0.5rem;
+    }
+    .stat-card__icon {
+      width: 38px;
+      height: 38px;
+      border-radius: var(--radius-md);
+      background: var(--green-50);
+      color: var(--green-700);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .stat-card__icon svg { width: 19px; height: 19px; }
+    .stat-card__value {
+      font-family: var(--font-body);
+      font-size: 2rem;
+      font-weight: 800;
+      color: var(--green-900);
+      line-height: 1;
+    }
+    .stat-card__label {
+      font-size: 0.85rem;
+      color: var(--gray-600);
+      font-weight: 600;
+    }
+
+    /* ---- Generic admin panel / table wrapper ---- */
+    .admin-panel {
+      background: var(--admin-surface);
+      border: 1px solid var(--admin-border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      margin-bottom: 1.5rem;
+    }
+    .admin-panel__header {
+      padding: 1.1rem 1.3rem;
+      border-bottom: 1px solid var(--admin-border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.8rem;
+      flex-wrap: wrap;
+    }
+    .admin-panel__title {
+      font-weight: 700;
+      font-size: 0.98rem;
+      color: var(--green-900);
+    }
+
+    .admin-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.86rem;
+    }
+    .admin-table th {
+      text-align: start;
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--gray-600);
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+      padding: 0.7rem 1.3rem;
+      background: var(--gray-50);
+      border-bottom: 1px solid var(--admin-border);
+      white-space: nowrap;
+    }
+    .admin-table td {
+      padding: 0.75rem 1.3rem;
+      border-bottom: 1px solid var(--admin-border);
+      color: var(--gray-800);
+      vertical-align: middle;
+    }
+    .admin-table tr:last-child td { border-bottom: none; }
+    .admin-table__price { font-family: var(--font-body); font-weight: 700; color: var(--green-800); white-space: nowrap; }
+    .admin-table__muted { color: var(--gray-400); font-size: 0.78rem; }
+
+    .status-pill {
+      display: inline-block;
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding: 0.22rem 0.6rem;
+      border-radius: var(--radius-full);
+      white-space: nowrap;
+    }
+    .status-pill--available { background: var(--green-100); color: var(--green-700); }
+    .status-pill--pending   { background: var(--amber-100); color: var(--amber-600); }
+    .status-pill--preparing { background: #e3edfb; color: #1d5fb0; }
+    .status-pill--done      { background: var(--green-100); color: var(--green-700); }
+    .status-pill--placeholder { background: var(--gold-50); color: var(--gold-600); }
+    .status-pill--cancelled { background: var(--red-100); color: var(--red-600); }
+
+    /* Method tag (pickup / delivery) — Orders view */
+    .method-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding: 0.22rem 0.6rem;
+      border-radius: var(--radius-full);
+      font-family: var(--font-body);
+      white-space: nowrap;
+    }
+    .method-tag--pickup { background: var(--green-100); color: var(--green-700); }
+    .method-tag--delivery { background: var(--gold-50); color: var(--gold-600); border: 1px solid var(--gold-200); }
+
+    /* Toolbar (search + filter) — reused wherever a panel needs it */
+    .admin-toolbar {
+      display: flex;
+      gap: 0.7rem;
+      flex-wrap: wrap;
+      align-items: center;
+      padding: 0.9rem 1.3rem;
+      border-bottom: 1px solid var(--admin-border);
+      background: var(--gray-50);
+    }
+    .admin-toolbar__search { flex: 1 1 220px; min-width: 180px; }
+    .admin-toolbar__filter { flex: 0 0 auto; min-width: 160px; }
+
+    /* Card-style list, used where a table is too dense (Categories, Offers) */
+    .admin-card-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+      gap: 1rem;
+      padding: 1.3rem;
+    }
+    .mini-card {
+      border: 1px solid var(--admin-border);
+      border-radius: var(--radius-md);
+      padding: 0.95rem 1.05rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    .mini-card__top {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+    .mini-card__emoji {
+      width: 34px;
+      height: 34px;
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.1rem;
+      flex-shrink: 0;
+    }
+    .mini-card__name { font-weight: 700; font-size: 0.9rem; color: var(--gray-800); flex: 1; }
+    .mini-card__meta { font-size: 0.78rem; color: var(--gray-600); }
+    .mini-card__price-row {
+      display: flex;
+      align-items: baseline;
+      gap: 0.5rem;
+      font-family: var(--font-body);
+    }
+    .mini-card__price-orig { font-size: 0.8rem; color: var(--gray-400); text-decoration: line-through; }
+    .mini-card__price-now { font-size: 1.05rem; font-weight: 800; color: var(--green-800); }
+
+    /* Note / callout box, reused across views */
+    .admin-note {
+      display: flex;
+      gap: 0.6rem;
+      align-items: flex-start;
+      background: var(--gold-50);
+      border: 1px solid var(--gold-200);
+      border-radius: var(--radius-md);
+      padding: 0.85rem 1rem;
+      font-size: 0.84rem;
+      color: var(--gray-800);
+      margin-bottom: 1.5rem;
+    }
+    .admin-note svg { width: 17px; height: 17px; color: var(--gold-600); flex-shrink: 0; margin-top: 0.1rem; }
+
+    .admin-note--warn {
+      background: var(--amber-100);
+      border-color: #e7c477;
+    }
+    .admin-note--warn svg { color: var(--amber-600); }
+
+    /* Settings view rows */
+    .settings-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      padding: 0.95rem 1.3rem;
+      border-bottom: 1px solid var(--admin-border);
+      flex-wrap: wrap;
+    }
+    .settings-row:last-child { border-bottom: none; }
+    .settings-row__label { font-weight: 600; font-size: 0.88rem; color: var(--gray-800); }
+    .settings-row__hint { font-size: 0.76rem; color: var(--gray-400); margin-top: 0.15rem; }
+    .settings-row__value { font-family: var(--font-body); font-weight: 700; color: var(--green-800); font-size: 0.94rem; }
+
+    @media (max-width: 640px) {
+      .admin-content { padding: 1.2rem 1rem 2.5rem; }
+      .admin-topbar { padding: 0.8rem 1rem; }
+      .admin-table { font-size: 0.8rem; }
+      .admin-table th, .admin-table td { padding: 0.6rem 0.8rem; }
+    }
+
+    /* ============================================
+       PHASE 5 PART 2 — STEP 2: PRODUCT MANAGEMENT
+    ============================================ */
+    .admin-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.55rem 1rem;
+      border-radius: var(--radius-md);
+      font-size: 0.82rem;
+      font-weight: 700;
+      font-family: var(--font-body);
+      transition: all var(--transition);
+      white-space: nowrap;
+      min-height: 38px;
+    }
+    .admin-btn--primary {
+      background: var(--green-800);
+      color: var(--white);
+    }
+    .admin-btn--primary:hover { background: var(--green-700); }
+    .admin-btn--ghost {
+      background: var(--gray-50);
+      color: var(--gray-600);
+      border: 1px solid var(--admin-border);
+    }
+    .admin-btn--ghost:hover { background: var(--gray-100); color: var(--gray-800); }
+    .admin-btn svg { width: 15px; height: 15px; flex-shrink: 0; }
+
+    .admin-panel__actions { display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap; }
+
+    .row-actions { display: flex; align-items: center; gap: 0.4rem; }
+    .row-action-btn {
+      width: 30px;
+      height: 30px;
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--gray-600);
+      border: 1px solid var(--admin-border);
+      background: var(--white);
+      transition: all var(--transition);
+      flex-shrink: 0;
+    }
+    .row-action-btn:hover { background: var(--gray-50); color: var(--green-800); }
+    .row-action-btn.danger:hover { background: var(--red-100); color: var(--red-600); border-color: var(--red-600); }
+    .row-action-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+    .row-action-btn:disabled:hover { background: var(--white); color: var(--gray-600); }
+    .row-action-btn svg { width: 14px; height: 14px; }
+
+    /* ---- Product modal ---- */
+    .pm-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 500;
+      background: rgba(15,35,24,0.55);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+      backdrop-filter: blur(2px);
+    }
+    .pm-overlay.open { opacity: 1; pointer-events: all; }
+    .pm-modal {
+      background: var(--white);
+      width: 100%;
+      max-width: 560px;
+      max-height: 90vh;
+      overflow-y: auto;
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-lg);
+      transform: translateY(16px);
+      transition: transform 0.25s ease;
+    }
+    .pm-overlay.open .pm-modal { transform: translateY(0); }
+    .pm-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+      padding: 1.1rem 1.3rem;
+      border-bottom: 1px solid var(--admin-border);
+      position: sticky;
+      top: 0;
+      background: var(--white);
+      z-index: 1;
+    }
+    .pm-title { font-family: var(--font-display); font-weight: 700; font-size: 1.05rem; color: var(--green-900); }
+    .pm-close {
+      width: 32px; height: 32px; border-radius: var(--radius-sm);
+      display: flex; align-items: center; justify-content: center;
+      color: var(--gray-600);
+    }
+    .pm-close:hover { background: var(--gray-50); }
+    .pm-close svg { width: 16px; height: 16px; }
+    .pm-body { padding: 1.1rem 1.3rem; display: flex; flex-direction: column; gap: 0.95rem; }
+    .pm-row { display: grid; grid-template-columns: 1fr 1fr; gap: 0.9rem; }
+    @media (max-width: 480px) { .pm-row { grid-template-columns: 1fr; } }
+    .pm-field { display: flex; flex-direction: column; gap: 0.35rem; }
+    .pm-label { font-size: 0.78rem; font-weight: 700; color: var(--gray-600); font-family: var(--font-body); }
+    .pm-label .req { color: var(--red-600); margin-inline-start: 2px; }
+    .pm-input, .pm-select, .pm-textarea {
+      width: 100%;
+      padding: 0.65rem 0.8rem;
+      border: 1.5px solid var(--gray-200);
+      border-radius: var(--radius-md);
+      font-size: 0.88rem;
+      font-family: inherit;
+      color: var(--gray-800);
+      background: var(--white);
+      outline: none;
+      transition: border-color var(--transition);
+      min-height: 42px;
+    }
+    .pm-textarea { min-height: 64px; resize: vertical; }
+    .pm-input:focus, .pm-select:focus, .pm-textarea:focus { border-color: var(--green-600); }
+    .pm-input.error, .pm-select.error { border-color: var(--red-600); }
+    .pm-error { font-size: 0.74rem; color: var(--red-600); font-family: var(--font-body); display: none; }
+    .pm-error.visible { display: block; }
+    .pm-check-row {
+      display: flex; align-items: center; gap: 0.55rem;
+      padding: 0.5rem 0.1rem;
+      font-size: 0.85rem; font-weight: 600; color: var(--gray-800);
+    }
+    .pm-check-row input[type="checkbox"] { width: 17px; height: 17px; accent-color: var(--green-800); flex-shrink: 0; }
+    .pm-hint { font-size: 0.72rem; color: var(--gray-400); font-family: var(--font-body); }
+    .pm-footer {
+      display: flex; gap: 0.6rem;
+      padding: 1rem 1.3rem;
+      border-top: 1px solid var(--admin-border);
+      position: sticky; bottom: 0; background: var(--white);
+    }
+    .pm-footer .admin-btn { flex: 1; justify-content: center; min-height: 44px; }
+
+    /* Admin toast (reuses cart-toast visual language from the customer site) */
+    .admin-toast {
+      position: fixed;
+      bottom: 1.5rem;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: var(--green-800);
+      color: var(--white);
+      padding: 0.7rem 1.4rem;
+      border-radius: var(--radius-full);
+      font-size: 0.86rem;
+      font-weight: 600;
+      font-family: var(--font-body);
+      z-index: 600;
+      opacity: 0;
+      transition: opacity 0.25s ease, transform 0.25s ease;
+      pointer-events: none;
+      box-shadow: var(--shadow-lg);
+      white-space: nowrap;
+    }
+    .admin-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  </style>
+</head>
+<body>
+
+  <!-- ==========================================
+       LOGIN OVERLAY (Phase 6 Step 6)
+       Shown before the dashboard when no valid JWT is found
+       in sessionStorage. Dismissed only on successful login.
+       Reuses pm-* CSS classes (no new CSS introduced).
+  =========================================== -->
+  <div id="cv-login-overlay" aria-modal="true" role="dialog"
+       aria-labelledby="cv-login-title"
+       style="
+         position:fixed;inset:0;z-index:9999;
+         background:var(--green-900);
+         display:flex;align-items:center;justify-content:center;
+         padding:1rem;
+       ">
+    <div class="pm-modal" style="max-width:420px;width:100%;border-radius:var(--radius-lg);box-shadow:var(--shadow-lg);">
+      <div class="pm-header" style="border-bottom:1px solid var(--admin-border);">
+        <div style="display:flex;align-items:center;gap:0.75rem;">
+          <div class="admin-brand__mark" style="flex-shrink:0;">CV</div>
+          <span class="pm-title" id="cv-login-title">كازا فيردي — لوحة التحكم</span>
+        </div>
+      </div>
+      <div class="pm-body">
+        <p id="cv-login-subtitle"
+           style="font-size:0.85rem;color:var(--gray-600);margin-bottom:0.25rem;">
+          أدخل بيانات الدخول للمتابعة
+        </p>
+
+        <!-- Username -->
+        <div class="pm-field">
+          <label class="pm-label" for="cv-login-username">
+            <span id="cv-login-label-user">اسم المستخدم</span>
+            <span class="req">*</span>
+          </label>
+          <input class="pm-input" id="cv-login-username" type="text"
+                 autocomplete="username" autocapitalize="none"
+                 oninput="document.getElementById('cv-login-error').style.display='none'">
+        </div>
+
+        <!-- Password -->
+        <div class="pm-field">
+          <label class="pm-label" for="cv-login-password">
+            <span id="cv-login-label-pass">كلمة المرور</span>
+            <span class="req">*</span>
+          </label>
+          <input class="pm-input" id="cv-login-password" type="password"
+                 autocomplete="current-password"
+                 onkeydown="if(event.key==='Enter')cvSubmitLogin()"
+                 oninput="document.getElementById('cv-login-error').style.display='none'">
+        </div>
+
+        <!-- Error message -->
+        <div id="cv-login-error"
+             style="display:none;background:var(--red-100);border:1.5px solid var(--red-600);
+                    border-radius:var(--radius-md);padding:0.65rem 0.85rem;
+                    font-size:0.84rem;color:var(--red-700);font-family:var(--font-body);">
+        </div>
+      </div>
+
+      <div class="pm-footer">
+        <button class="admin-btn admin-btn--primary"
+                id="cv-login-btn"
+                onclick="cvSubmitLogin()"
+                style="flex:1;justify-content:center;min-height:46px;font-size:0.95rem;">
+          <span id="cv-login-btn-label">دخول</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+
+  <div class="admin-drawer-backdrop" id="admin-backdrop" onclick="closeDrawer()"></div>
+
+  <div class="admin-shell">
+
+    <!-- ==========================================
+         SIDEBAR
+    =========================================== -->
+    <aside class="admin-sidebar" id="admin-sidebar">
+      <div class="admin-brand">
+        <div class="admin-brand__mark">CV</div>
+        <div class="admin-brand__text">
+          <span class="admin-brand__name">كازا فيردي</span>
+          <span class="admin-brand__sub" id="admin-brand-sub">لوحة التحكم</span>
+        </div>
+        <button class="admin-sidebar__closebtn" onclick="closeDrawer()" aria-label="إغلاق القائمة">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+
+      <nav class="admin-nav" id="admin-nav">
+        <button class="admin-nav__btn active" data-view="home" onclick="switchView('home')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2h-4a1 1 0 0 1-1-1v-5h-4v5a1 1 0 0 1-1 1H5a2 2 0 0 1-2-2z"/></svg>
+          <span id="nav-label-home">الرئيسية</span>
+        </button>
+        <button class="admin-nav__btn" data-view="products" onclick="switchView('products')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/></svg>
+          <span id="nav-label-products">المنتجات</span>
+        </button>
+        <button class="admin-nav__btn" data-view="categories" onclick="switchView('categories')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+          <span id="nav-label-categories">الفئات</span>
+        </button>
+        <button class="admin-nav__btn" data-view="offers" onclick="switchView('offers')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="5" x2="5" y2="19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/></svg>
+          <span id="nav-label-offers">العروض</span>
+        </button>
+        <button class="admin-nav__btn" data-view="orders" onclick="switchView('orders')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 2h6a1 1 0 0 1 1 1v1h1a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h1V3a1 1 0 0 1 1-1z"/><line x1="8" y1="11" x2="16" y2="11"/><line x1="8" y1="15" x2="16" y2="15"/></svg>
+          <span id="nav-label-orders">الطلبات</span>
+        </button>
+        <button class="admin-nav__btn" data-view="settings" onclick="switchView('settings')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          <span id="nav-label-settings">الإعدادات</span>
+        </button>
+      </nav>
+
+      <div class="admin-sidebar__footer">
+        <span class="admin-version-tag" id="admin-version-tag">أساس اللوحة — الجزء 1</span>
+      </div>
+    </aside>
+
+    <!-- ==========================================
+         MAIN
+    =========================================== -->
+    <div class="admin-main">
+      <header class="admin-topbar">
+        <button class="admin-hamburger" onclick="openDrawer()" aria-label="فتح القائمة">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+        </button>
+        <span class="admin-topbar__title" id="admin-topbar-title">الرئيسية</span>
+        <div class="admin-lang-toggle">
+          <button id="admin-btn-ar" class="active" onclick="setAdminLang('ar')" aria-pressed="true">AR</button>
+          <button id="admin-btn-fr" onclick="setAdminLang('fr')" aria-pressed="false">FR</button>
+        </div>
+      </header>
+
+      <main class="admin-content">
+
+        <!-- ===== HOME ===== -->
+        <section class="admin-view active" id="view-home">
+          <p class="admin-page-subtitle" id="home-subtitle">نظرة سريعة على متجرك</p>
+
+          <div class="stat-grid" id="stat-grid"><!-- filled by JS --></div>
+
+          <div class="admin-panel">
+            <div class="admin-panel__header">
+              <span class="admin-panel__title" id="home-cat-breakdown-title">توزيع المنتجات حسب الفئة</span>
+              <span class="data-pill data-pill--live" id="pill-live-1">مباشر — من بيانات الموقع</span>
+            </div>
+            <div id="home-cat-breakdown"><!-- filled by JS --></div>
+          </div>
+
+          <div class="admin-note" id="home-note">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+            <span id="home-note-text">هذه اللوحة هي الأساس فقط. الإضافة والتعديل والحذف لكل قسم ستتوفر في الأجزاء القادمة من هذه المرحلة.</span>
+          </div>
+        </section>
+
+        <!-- ===== PRODUCTS ===== -->
+        <section class="admin-view" id="view-products">
+          <p class="admin-page-subtitle" id="products-subtitle">عرض للقراءة فقط لكل المنتجات الحالية على الموقع</p>
+          <div class="admin-panel">
+            <div class="admin-panel__header">
+              <span class="admin-panel__title" id="products-panel-title">كل المنتجات</span>
+              <div class="admin-panel__actions">
+                <span class="data-pill data-pill--live" id="pill-live-2">مباشر — من بيانات الموقع</span>
+                <button class="admin-btn admin-btn--ghost" id="btn-reset-products" onclick="resetProductsToDefaults()">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-9.36L1 10"/></svg>
+                  <span id="btn-reset-products-label">إعادة الضبط</span>
+                </button>
+                <button class="admin-btn admin-btn--primary" id="btn-add-product" onclick="openProductModal(null)">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                  <span id="btn-add-product-label">إضافة منتج</span>
+                </button>
+              </div>
+            </div>
+            <div style="overflow-x:auto;">
+              <table class="admin-table" id="products-table"><!-- filled by JS --></table>
+            </div>
+          </div>
+          <div class="admin-note" id="products-note">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+            <span id="products-note-text">التغييرات هنا محفوظة في هذا المتصفح فقط (localStorage) ولا تُعدّل موقع الزبائن مباشرة بعد.</span>
+          </div>
+        </section>
+
+        <!-- ===== CATEGORIES ===== -->
+        <section class="admin-view" id="view-categories">
+          <p class="admin-page-subtitle" id="categories-subtitle">الفئات الحالية في قائمة الطعام</p>
+          <div class="admin-panel">
+            <div class="admin-panel__header">
+              <span class="admin-panel__title" id="categories-panel-title">الفئات</span>
+              <div class="admin-panel__actions">
+                <span class="data-pill data-pill--live" id="pill-live-3">مباشر — من بيانات الموقع</span>
+                <button class="admin-btn admin-btn--ghost" id="btn-reset-categories" onclick="resetCategoriesToDefaults()">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-9.36L1 10"/></svg>
+                  <span id="btn-reset-categories-label">إعادة الضبط</span>
+                </button>
+                <button class="admin-btn admin-btn--primary" id="btn-add-category" onclick="openCategoryModal(null)">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                  <span id="btn-add-category-label">إضافة فئة</span>
+                </button>
+              </div>
+            </div>
+            <div class="admin-card-list" id="categories-list"><!-- filled by JS --></div>
+          </div>
+          <div class="admin-note" id="categories-note">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+            <span id="categories-note-text">التغييرات هنا محفوظة في هذا المتصفح فقط (localStorage) ولا تُعدّل موقع الزبائن مباشرة بعد.</span>
+          </div>
+        </section>
+
+        <!-- ===== OFFERS ===== -->
+        <section class="admin-view" id="view-offers">
+          <p class="admin-page-subtitle" id="offers-subtitle-admin">العروض الحالية المعروضة للزبائن</p>
+          <div class="admin-panel">
+            <div class="admin-panel__header">
+              <span class="admin-panel__title" id="offers-panel-title">العروض</span>
+              <div class="admin-panel__actions">
+                <span class="data-pill data-pill--live" id="pill-live-5">مباشر — من بيانات الموقع</span>
+                <button class="admin-btn admin-btn--ghost" id="btn-reset-offers" onclick="resetOffersToDefaults()">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-9.36L1 10"/></svg>
+                  <span id="btn-reset-offers-label">إعادة الضبط</span>
+                </button>
+                <button class="admin-btn admin-btn--primary" id="btn-add-offer" onclick="openOfferModal(null)">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                  <span id="btn-add-offer-label">إضافة عرض</span>
+                </button>
+              </div>
+            </div>
+            <div class="admin-card-list" id="offers-list"><!-- filled by JS --></div>
+          </div>
+          <div class="admin-note" id="offers-note">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+            <span id="offers-note-text">التغييرات هنا محفوظة في هذا المتصفح فقط (localStorage) ولا تُعدّل موقع الزبائن مباشرة بعد. العروض المعلّمة "تجريبي" هي أمثلة توضيحية فقط.</span>
+          </div>
+        </section>
+
+        <!-- ===== ORDERS (Phase 5 Part 2 — Step 5) ===== -->
+        <section class="admin-view" id="view-orders">
+          <p class="admin-page-subtitle" id="orders-subtitle">متابعة طلبات الزبائن</p>
+          <div class="admin-note admin-note--warn" id="orders-warn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            <span id="orders-warn-text">لا يوجد بعد نظام حقيقي لتسجيل الطلبات — طلبات الزبائن تصل حالياً عبر واتساب فقط. الجدول أدناه بيانات تجريبية للتوضيح فقط.</span>
+          </div>
+          <div class="admin-panel">
+            <div class="admin-panel__header">
+              <span class="admin-panel__title" id="orders-panel-title">طلبات تجريبية</span>
+              <div class="admin-panel__actions">
+                <span class="data-pill data-pill--demo" id="pill-demo-2">تجريبي بالكامل</span>
+                <button class="admin-btn admin-btn--ghost" id="btn-reset-orders" onclick="resetOrdersToDefaults()">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-9.36L1 10"/></svg>
+                  <span id="btn-reset-orders-label">إعادة الضبط</span>
+                </button>
+              </div>
+            </div>
+            <div class="admin-toolbar">
+              <input class="pm-input admin-toolbar__search" id="order-search-input" type="text"
+                     oninput="onOrderSearchInput(this.value)"
+                     placeholder="بحث بالاسم أو الهاتف أو رقم الطلب…">
+              <select class="pm-select admin-toolbar__filter" id="order-status-filter" onchange="onOrderStatusFilterChange(this.value)"></select>
+            </div>
+            <div style="overflow-x:auto;">
+              <table class="admin-table" id="orders-table"><!-- filled by JS --></table>
+            </div>
+          </div>
+          <div class="admin-note" id="orders-note">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+            <span id="orders-note-text">تغييرات حالة الطلب هنا محفوظة في هذا المتصفح فقط (localStorage) ولأغراض العرض التوضيحي فقط — لا يوجد نظام طلبات حقيقي متصل بعد.</span>
+          </div>
+        </section>
+
+        <!-- ===== SETTINGS (Phase 5 Part 2 — Step 6) ===== -->
+        <section class="admin-view" id="view-settings">
+          <p class="admin-page-subtitle" id="settings-subtitle">الإعدادات الحالية المستخدمة في الموقع</p>
+          <div class="admin-panel">
+            <div class="admin-panel__header">
+              <span class="admin-panel__title" id="settings-panel-title">إعدادات المتجر</span>
+              <div class="admin-panel__actions">
+                <span class="data-pill data-pill--live" id="pill-live-4">مباشر — القيم الفعلية بالموقع</span>
+                <button class="admin-btn admin-btn--ghost" id="btn-reset-settings" onclick="resetSettingsToDefaults()">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-9.36L1 10"/></svg>
+                  <span id="btn-reset-settings-label">إعادة الضبط</span>
+                </button>
+                <button class="admin-btn admin-btn--primary" id="btn-edit-settings" onclick="openSettingsModal()">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                  <span id="btn-edit-settings-label">تعديل الإعدادات</span>
+                </button>
+              </div>
+            </div>
+            <div id="settings-rows"><!-- filled by JS --></div>
+          </div>
+          <div class="admin-note" id="settings-note">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+            <span id="settings-note-text">التغييرات هنا محفوظة في هذا المتصفح فقط (localStorage) ولا تُعدّل موقع الزبائن مباشرة بعد.</span>
+          </div>
+        </section>
+
+      </main>
+    </div>
+  </div>
+
+  <!-- ==========================================
+       PRODUCT MODAL (Phase 5 Part 2 — Step 2)
+  =========================================== -->
+  <div class="pm-overlay" id="pm-overlay" role="dialog" aria-modal="true" aria-labelledby="pm-title" tabindex="-1">
+    <div class="pm-modal">
+      <div class="pm-header">
+        <span class="pm-title" id="pm-title">إضافة منتج</span>
+        <button class="pm-close" onclick="closeProductModal()" aria-label="إغلاق">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <div class="pm-body">
+
+        <div class="pm-row">
+          <div class="pm-field">
+            <label class="pm-label" for="pm-category"><span id="pm-label-category">الفئة</span> <span class="req">*</span></label>
+            <select class="pm-select" id="pm-category"></select>
+          </div>
+          <div class="pm-field">
+            <label class="pm-label" id="pm-label-emoji" for="pm-emoji">الرمز التعبيري</label>
+            <input class="pm-input" id="pm-emoji" type="text" maxlength="4" placeholder="🍔">
+          </div>
+        </div>
+
+        <div class="pm-row">
+          <div class="pm-field">
+            <label class="pm-label" for="pm-name-ar"><span id="pm-label-name-ar">الاسم (عربي)</span> <span class="req">*</span></label>
+            <input class="pm-input" id="pm-name-ar" type="text">
+            <span class="pm-error" id="pm-err-name-ar"></span>
+          </div>
+          <div class="pm-field">
+            <label class="pm-label" for="pm-name-fr"><span id="pm-label-name-fr">الاسم (فرنسي)</span> <span class="req">*</span></label>
+            <input class="pm-input" id="pm-name-fr" type="text">
+            <span class="pm-error" id="pm-err-name-fr"></span>
+          </div>
+        </div>
+
+        <div class="pm-row">
+          <div class="pm-field">
+            <label class="pm-label" id="pm-label-desc-ar" for="pm-desc-ar">الوصف (عربي)</label>
+            <textarea class="pm-textarea" id="pm-desc-ar"></textarea>
+          </div>
+          <div class="pm-field">
+            <label class="pm-label" id="pm-label-desc-fr" for="pm-desc-fr">الوصف (فرنسي)</label>
+            <textarea class="pm-textarea" id="pm-desc-fr"></textarea>
+          </div>
+        </div>
+
+        <div class="pm-field">
+          <label class="pm-check-row" for="pm-placeholder">
+            <input type="checkbox" id="pm-placeholder" onchange="onPmPlaceholderChange()">
+            <span id="pm-label-placeholder-chk">السعر غير مؤكد بعد (منتج مؤقت)</span>
+          </label>
+        </div>
+
+        <div class="pm-field" id="pm-price-wrap">
+          <label class="pm-label" for="pm-price"><span id="pm-label-price">السعر (دج)</span> <span class="req">*</span></label>
+          <input class="pm-input" id="pm-price" type="number" min="0" step="10">
+          <span class="pm-error" id="pm-err-price"></span>
+          <span class="pm-hint" id="pm-price-hint">إذا كان للمنتج أحجام متعددة (مثل التاكوس)، فهذا الحقل يُعدّل السعر الأساسي فقط — الأحجام الحالية تبقى كما هي.</span>
+        </div>
+
+        <div class="pm-row">
+          <div class="pm-field">
+            <label class="pm-check-row" for="pm-available">
+              <input type="checkbox" id="pm-available">
+              <span id="pm-label-available-chk">متاح للطلب</span>
+            </label>
+          </div>
+          <div class="pm-field">
+            <label class="pm-check-row" for="pm-featured">
+              <input type="checkbox" id="pm-featured">
+              <span id="pm-label-featured-chk">الأكثر طلباً (مميز)</span>
+            </label>
+          </div>
+        </div>
+
+      </div>
+      <div class="pm-footer">
+        <button class="admin-btn admin-btn--ghost" onclick="closeProductModal()" id="pm-btn-cancel">إلغاء</button>
+        <button class="admin-btn admin-btn--primary" onclick="submitProductForm()" id="pm-btn-save">حفظ</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================
+       CATEGORY MODAL (Phase 5 Part 2 — Step 3)
+       Reuses the exact pm-* modal visual language (overlay,
+       radius, shadow, field/error/hint patterns) established
+       by the product modal — no new modal system introduced.
+  =========================================== -->
+  <div class="pm-overlay" id="cm-overlay" role="dialog" aria-modal="true" aria-labelledby="cm-title" tabindex="-1">
+    <div class="pm-modal">
+      <div class="pm-header">
+        <span class="pm-title" id="cm-title">إضافة فئة</span>
+        <button class="pm-close" onclick="closeCategoryModal()" aria-label="إغلاق">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <div class="pm-body">
+
+        <div class="pm-row">
+          <div class="pm-field">
+            <label class="pm-label" for="cm-name-ar"><span id="cm-label-name-ar">الاسم (عربي)</span> <span class="req">*</span></label>
+            <input class="pm-input" id="cm-name-ar" type="text">
+            <span class="pm-error" id="cm-err-name-ar"></span>
+          </div>
+          <div class="pm-field">
+            <label class="pm-label" for="cm-name-fr"><span id="cm-label-name-fr">الاسم (فرنسي)</span> <span class="req">*</span></label>
+            <input class="pm-input" id="cm-name-fr" type="text">
+            <span class="pm-error" id="cm-err-name-fr"></span>
+          </div>
+        </div>
+
+        <div class="pm-field">
+          <label class="pm-label" id="cm-label-emoji" for="cm-emoji">الرمز التعبيري</label>
+          <input class="pm-input" id="cm-emoji" type="text" maxlength="4" placeholder="🍽️">
+        </div>
+
+        <div class="pm-field">
+          <label class="pm-check-row" for="cm-enabled">
+            <input type="checkbox" id="cm-enabled">
+            <span id="cm-label-enabled-chk">فئة مفعّلة</span>
+          </label>
+          <span class="pm-hint" id="cm-enabled-hint">الفئات المعطّلة تبقى محفوظة مع منتجاتها لكنها تُعرض كمعطّلة في اللوحة.</span>
+        </div>
+
+      </div>
+      <div class="pm-footer">
+        <button class="admin-btn admin-btn--ghost" onclick="closeCategoryModal()" id="cm-btn-cancel">إلغاء</button>
+        <button class="admin-btn admin-btn--primary" onclick="submitCategoryForm()" id="cm-btn-save">حفظ</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================
+       OFFER MODAL (Phase 5 Part 2 — Step 4)
+       Reuses the exact pm-* modal visual language (overlay,
+       radius, shadow, field/error/hint patterns) established
+       by the product and category modals — no new modal
+       system introduced.
+  =========================================== -->
+  <div class="pm-overlay" id="om-overlay" role="dialog" aria-modal="true" aria-labelledby="om-title" tabindex="-1">
+    <div class="pm-modal">
+      <div class="pm-header">
+        <span class="pm-title" id="om-title">إضافة عرض</span>
+        <button class="pm-close" onclick="closeOfferModal()" aria-label="إغلاق">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <div class="pm-body">
+
+        <div class="pm-row">
+          <div class="pm-field">
+            <label class="pm-label" id="om-label-emoji" for="om-emoji">الرمز التعبيري (صورة مؤقتة)</label>
+            <input class="pm-input" id="om-emoji" type="text" maxlength="4" placeholder="🎉">
+          </div>
+          <div class="pm-field">
+            <label class="pm-label" for="om-linked-category"><span id="om-label-linked-category">فئة مرتبطة (اختياري)</span></label>
+            <select class="pm-select" id="om-linked-category"></select>
+          </div>
+        </div>
+
+        <div class="pm-row">
+          <div class="pm-field">
+            <label class="pm-label" for="om-name-ar"><span id="om-label-name-ar">الاسم (عربي)</span> <span class="req">*</span></label>
+            <input class="pm-input" id="om-name-ar" type="text">
+            <span class="pm-error" id="om-err-name-ar"></span>
+          </div>
+          <div class="pm-field">
+            <label class="pm-label" for="om-name-fr"><span id="om-label-name-fr">الاسم (فرنسي)</span> <span class="req">*</span></label>
+            <input class="pm-input" id="om-name-fr" type="text">
+            <span class="pm-error" id="om-err-name-fr"></span>
+          </div>
+        </div>
+
+        <div class="pm-row">
+          <div class="pm-field">
+            <label class="pm-label" id="om-label-desc-ar" for="om-desc-ar">الوصف (عربي)</label>
+            <textarea class="pm-textarea" id="om-desc-ar"></textarea>
+          </div>
+          <div class="pm-field">
+            <label class="pm-label" id="om-label-desc-fr" for="om-desc-fr">الوصف (فرنسي)</label>
+            <textarea class="pm-textarea" id="om-desc-fr"></textarea>
+          </div>
+        </div>
+
+        <div class="pm-row">
+          <div class="pm-field">
+            <label class="pm-label" for="om-original-price"><span id="om-label-original-price">السعر الأصلي (دج)</span> <span class="req">*</span></label>
+            <input class="pm-input" id="om-original-price" type="number" min="0" step="10">
+            <span class="pm-error" id="om-err-original-price"></span>
+          </div>
+          <div class="pm-field">
+            <label class="pm-label" for="om-price"><span id="om-label-price">سعر العرض (دج)</span> <span class="req">*</span></label>
+            <input class="pm-input" id="om-price" type="number" min="0" step="10">
+            <span class="pm-error" id="om-err-price"></span>
+          </div>
+        </div>
+        <span class="pm-hint" id="om-discount-hint">نسبة الخصم تُحسب تلقائياً من السعر الأصلي وسعر العرض.</span>
+
+        <div class="pm-row">
+          <div class="pm-field">
+            <label class="pm-check-row" for="om-demo">
+              <input type="checkbox" id="om-demo">
+              <span id="om-label-demo-chk">عرض تجريبي (للعرض فقط)</span>
+            </label>
+          </div>
+          <div class="pm-field">
+            <label class="pm-check-row" for="om-available">
+              <input type="checkbox" id="om-available">
+              <span id="om-label-available-chk">عرض مفعّل</span>
+            </label>
+          </div>
+        </div>
+
+      </div>
+      <div class="pm-footer">
+        <button class="admin-btn admin-btn--ghost" onclick="closeOfferModal()" id="om-btn-cancel">إلغاء</button>
+        <button class="admin-btn admin-btn--primary" onclick="submitOfferForm()" id="om-btn-save">حفظ</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================
+       ORDER DETAIL MODAL (Phase 5 Part 2 — Step 5)
+       Reuses the exact pm-* modal visual language — no new
+       modal system introduced. Read-only order details, plus
+       a live status <select> that updates the same ORDERS
+       store used by the table's quick-status dropdown.
+  =========================================== -->
+  <div class="pm-overlay" id="ordm-overlay" role="dialog" aria-modal="true" aria-labelledby="ordm-title" tabindex="-1">
+    <div class="pm-modal">
+      <div class="pm-header">
+        <span class="pm-title" id="ordm-title">تفاصيل الطلب</span>
+        <button class="pm-close" onclick="closeOrderModal()" aria-label="إغلاق">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <div class="pm-body" id="ordm-body">
+        <!-- filled by JS -->
+      </div>
+      <div class="pm-footer">
+        <button class="admin-btn admin-btn--primary" style="flex:1;justify-content:center;" onclick="closeOrderModal()" id="ordm-btn-close">إغلاق</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================
+       SETTINGS MODAL (Phase 5 Part 2 — Step 6)
+       Reuses the exact pm-* modal visual language (overlay,
+       radius, shadow, field/error/hint patterns) established
+       by the product, category, and offer modals — no new
+       modal system introduced.
+       Editable fields: delivery fee, WhatsApp number,
+       delivery zone (AR + FR).
+  =========================================== -->
+  <div class="pm-overlay" id="sm-overlay" role="dialog" aria-modal="true" aria-labelledby="sm-title" tabindex="-1">
+    <div class="pm-modal">
+      <div class="pm-header">
+        <span class="pm-title" id="sm-title">تعديل الإعدادات</span>
+        <button class="pm-close" onclick="closeSettingsModal()" aria-label="إغلاق">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <div class="pm-body">
+
+        <!-- Delivery fee -->
+        <div class="pm-field">
+          <label class="pm-label" for="sm-delivery-fee">
+            <span id="sm-label-delivery-fee">رسوم التوصيل (دج)</span>
+            <span class="req">*</span>
+          </label>
+          <input class="pm-input" id="sm-delivery-fee" type="number" min="0" step="10">
+          <span class="pm-error" id="sm-err-delivery-fee"></span>
+          <span class="pm-hint" id="sm-hint-delivery-fee">تُضاف تلقائياً عند اختيار التوصيل في السلة</span>
+        </div>
+
+        <!-- WhatsApp number -->
+        <div class="pm-field">
+          <label class="pm-label" for="sm-wa-number">
+            <span id="sm-label-wa-number">رقم واتساب المتجر</span>
+            <span class="req">*</span>
+          </label>
+          <input class="pm-input" id="sm-wa-number" type="text" inputmode="tel" autocomplete="tel"
+                 placeholder="+213 7XX XX XX XX">
+          <span class="pm-error" id="sm-err-wa-number"></span>
+          <span class="pm-hint" id="sm-hint-wa-number">الرقم المستخدم في زر إرسال الطلب عبر واتساب</span>
+        </div>
+
+        <!-- Delivery zone AR -->
+        <div class="pm-field">
+          <label class="pm-label" for="sm-zone-ar">
+            <span id="sm-label-zone-ar">منطقة التوصيل (عربي)</span>
+            <span class="req">*</span>
+          </label>
+          <input class="pm-input" id="sm-zone-ar" type="text">
+          <span class="pm-error" id="sm-err-zone-ar"></span>
+        </div>
+
+        <!-- Delivery zone FR -->
+        <div class="pm-field">
+          <label class="pm-label" for="sm-zone-fr">
+            <span id="sm-label-zone-fr">منطقة التوصيل (فرنسي)</span>
+            <span class="req">*</span>
+          </label>
+          <input class="pm-input" id="sm-zone-fr" type="text">
+          <span class="pm-error" id="sm-err-zone-fr"></span>
+          <span class="pm-hint" id="sm-hint-zone">خارج هذه المنطقة، يظهر خيار الاستلام من المحل فقط</span>
+        </div>
+
+      </div>
+      <div class="pm-footer">
+        <button class="admin-btn admin-btn--ghost" onclick="closeSettingsModal()" id="sm-btn-cancel">إلغاء</button>
+        <button class="admin-btn admin-btn--primary" onclick="submitSettingsForm()" id="sm-btn-save">حفظ</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="admin-toast" id="admin-toast" aria-live="polite"></div>
+
+  <script>
+    /* ================================================
+       DATA SNAPSHOT (Phase 5 — Part 1)
+       No backend exists yet, so this dashboard cannot query
+       the live site at runtime. The counts/lists below are a
+       manually-synced snapshot of index.html's PRODUCTS /
+       CATEGORIES / OFFERS / DELIVERY_FEE / WA_NUMBER as of
+       Phase 4 Part 2. They are tagged "مباشر / Live" because
+       they mirror real site configuration (unlike Orders,
+       which has no real data source at all and is tagged
+       "تجريبي / Demo").
+       TODO (later phase): replace this snapshot with a real
+       read from a shared data source once a backend exists.
+    ================================================ */
+    /* ================================================
+       CATEGORIES STORE (Phase 5 Part 2 — Step 3)
+       Converted from the Part 1 static CATEGORY_META snapshot
+       into a live, editable store — same pattern already
+       established by PRODUCTS in Step 2:
+       - DEFAULT_CATEGORIES is the faithful snapshot of
+         index.html's 6 categories (id, emoji, nameAr, nameFr,
+         gradient preserved exactly as before), each given an
+         explicit `order` (1-6, matching prior array order) and
+         `enabled: true` (new field for this step).
+       - CATEGORIES is seeded from DEFAULT_CATEGORIES into
+         localStorage under 'cv_admin_categories' on first run.
+       - Every add/edit/delete/reorder/enable-toggle mutates the
+         array and re-persists immediately, exactly like products.
+       - Category `id` values are the same strings PRODUCTS.category
+         already references (tacos/burgers/sandwichs/poutines/
+         crepes/boissons) — preserving that structure is required
+         so existing products keep resolving to a category name.
+         Deleting a category that still has products assigned is
+         blocked (see deleteCategoryConfirm) to avoid orphaning
+         products, since there is no cascade/reassignment UI in
+         this step.
+       - Still local-browser-only; no live bridge to index.html
+         (Phase 6 scope, same limitation as PRODUCTS).
+    ================================================ */
+    const DEFAULT_CATEGORIES = [
+      { id: 'tacos',     emoji: '🌮', nameAr: 'تاكوس',      nameFr: 'Tacos',     gradient: 'linear-gradient(135deg,#1a3a2e,#2d6048)', enabled: true, order: 1 },
+      { id: 'burgers',   emoji: '🍔', nameAr: 'برغر',        nameFr: 'Burgers',   gradient: 'linear-gradient(135deg,#8b2020,#c8102e)', enabled: true, order: 2 },
+      { id: 'sandwichs', emoji: '🥙', nameAr: 'ساندويشات',   nameFr: 'Sandwichs', gradient: 'linear-gradient(135deg,#a07830,#d4a853)', enabled: true, order: 3 },
+      { id: 'poutines',  emoji: '🍟', nameAr: 'بوتين',       nameFr: 'Poutines',  gradient: 'linear-gradient(135deg,#9a5500,#e08020)', enabled: true, order: 4 },
+      { id: 'crepes',    emoji: '🥞', nameAr: 'كريب',        nameFr: 'Crêpes',    gradient: 'linear-gradient(135deg,#7a1a40,#c4406a)', enabled: true, order: 5 },
+      { id: 'boissons',  emoji: '🥤', nameAr: 'مشروبات',     nameFr: 'Boissons',  gradient: 'linear-gradient(135deg,#0d3b7a,#1976d2)', enabled: true, order: 6 },
+    ];
+
+    /* Rotating gradient palette for newly-created categories — kept
+       out of the form (no color-picker UI requested), auto-assigned
+       so new category cards still get a distinct image-slot look
+       consistent with the existing card visual language. */
+    const CATEGORY_GRADIENT_PALETTE = [
+      'linear-gradient(135deg,#1a3a2e,#2d6048)',
+      'linear-gradient(135deg,#8b2020,#c8102e)',
+      'linear-gradient(135deg,#a07830,#d4a853)',
+      'linear-gradient(135deg,#9a5500,#e08020)',
+      'linear-gradient(135deg,#7a1a40,#c4406a)',
+      'linear-gradient(135deg,#0d3b7a,#1976d2)',
+      'linear-gradient(135deg,#3a1a6b,#6a3ac4)',
+      'linear-gradient(135deg,#1a5c4a,#2fae8a)',
+    ];
+
+    let CATEGORIES = [];
+    const CATEGORIES_STORAGE_KEY = 'cv_admin_categories';
+
+    function loadCategories() {
+      try {
+        const raw = localStorage.getItem(CATEGORIES_STORAGE_KEY);
+        if (raw) { CATEGORIES = JSON.parse(raw); return; }
+      } catch (e) {}
+      CATEGORIES = JSON.parse(JSON.stringify(DEFAULT_CATEGORIES));
+      saveCategories();
+    }
+    function saveCategories() {
+      try { localStorage.setItem(CATEGORIES_STORAGE_KEY, JSON.stringify(CATEGORIES)); } catch (e) {}
+    }
+    function resetCategoriesToDefaults() {
+      const isFr = currentAdminLang === 'fr';
+      const msg = isFr
+        ? 'Réinitialiser les catégories à la liste par défaut du site ? Toutes vos modifications locales seront perdues.'
+        : 'إعادة ضبط الفئات إلى قائمة الموقع الافتراضية؟ سيتم فقدان كل تعديلاتك المحلية.';
+      if (!window.confirm(msg)) return;
+      CATEGORIES = JSON.parse(JSON.stringify(DEFAULT_CATEGORIES));
+      saveCategories();
+      renderAllDynamicContent();
+      showAdminToast(isFr ? 'Réinitialisé' : 'تمت إعادة الضبط');
+    }
+    function sortedCategories() { return [...CATEGORIES].sort((a, b) => (a.order || 0) - (b.order || 0)); }
+    function categoryMeta(id) { return CATEGORIES.find(c => c.id === id) || null; }
+    function categoryCount(id) { return PRODUCTS.filter(p => p.category === id).length; }
+
+
+    /* ================================================
+       PRODUCTS STORE (Phase 5 Part 2 — Step 2)
+       Corrected to exactly mirror index.html's PRODUCTS array
+       (fixing the name/count divergence noted as tech debt in
+       Phase 5 Part 1). This is now a *live, editable* store:
+       - Seeded once from DEFAULT_PRODUCTS into localStorage
+         under 'cv_admin_products'
+       - Every add/edit/delete mutates PRODUCTS and re-persists
+       - Still fully separate from index.html — no live bridge
+         to the customer site exists yet (Phase 6 scope). Editing
+         here does NOT change what customers see; this is staged
+         data management only, exactly as scoped for this step.
+    ================================================ */
+    const DEFAULT_PRODUCTS = [
+      { id:'tacos-poulet', category:'tacos', nameAr:'تاكوس دجاج', nameFr:'Tacos Poulet', descriptionAr:'تاكوس مع دجاج مشوي، صلصة خاصة، خضروات طازجة', descriptionFr:'Tacos garni de poulet grillé, sauce maison et légumes frais', emoji:'🌮', basePrice:450, sizes:[{id:'M',labelAr:'وسط',labelFr:'Moyen',price:450},{id:'L',labelAr:'كبير',labelFr:'Grand',price:700}], addons:[{id:'camembert',labelAr:'كاممبير',labelFr:'Camembert',price:100},{id:'grat-cam',labelAr:'مع كاممبير مذاب',labelFr:'Gratiné Camembert',price:150},{id:'grat-cam-ched',labelAr:'كاممبير + شيدر مذاب',labelFr:'Gratiné Camembert + Cheddar',price:200}], available:true, featured:true, isPlaceholder:false, order:1 },
+      { id:'tacos-viande', category:'tacos', nameAr:'تاكوس لحم', nameFr:'Tacos Viande', descriptionAr:'تاكوس مع لحم بقري مشوي، صلصة خاصة، خضروات طازجة', descriptionFr:'Tacos garni de viande hachée grillée, sauce maison et légumes frais', emoji:'🌮', basePrice:550, sizes:[{id:'M',labelAr:'وسط',labelFr:'Moyen',price:550},{id:'L',labelAr:'كبير',labelFr:'Grand',price:750}], addons:[{id:'camembert',labelAr:'كاممبير',labelFr:'Camembert',price:100},{id:'grat-cam',labelAr:'مع كاممبير مذاب',labelFr:'Gratiné Camembert',price:150},{id:'grat-cam-ched',labelAr:'كاممبير + شيدر مذاب',labelFr:'Gratiné Camembert + Cheddar',price:200}], available:true, featured:false, isPlaceholder:false, order:2 },
+      { id:'tacos-mixte', category:'tacos', nameAr:'تاكوس مشكّل', nameFr:'Tacos Mixte', descriptionAr:'تاكوس مع دجاج ولحم معاً، صلصة خاصة، خضروات طازجة', descriptionFr:'Tacos avec poulet et viande, sauce maison et légumes frais', emoji:'🌮', basePrice:600, sizes:[{id:'M',labelAr:'وسط',labelFr:'Moyen',price:600},{id:'L',labelAr:'كبير',labelFr:'Grand',price:800}], addons:[{id:'camembert',labelAr:'كاممبير',labelFr:'Camembert',price:100},{id:'grat-cam',labelAr:'مع كاممبير مذاب',labelFr:'Gratiné Camembert',price:150},{id:'grat-cam-ched',labelAr:'كاممبير + شيدر مذاب',labelFr:'Gratiné Camembert + Cheddar',price:200}], available:true, featured:false, isPlaceholder:false, order:3 },
+
+      { id:'cheeseburger', category:'burgers', nameAr:'تشيزبرغر', nameFr:'Cheeseburger', descriptionAr:'برغر مع شريحة لحم، جبن، خس، طماطم وصلصة', descriptionFr:'Steak haché, cheddar fondu, laitue, tomate et sauce maison', emoji:'🍔', basePrice:250, sizes:[], addons:[], available:true, featured:true, isPlaceholder:false, order:1 },
+      { id:'double-cheeseburger', category:'burgers', nameAr:'دبل تشيزبرغر', nameFr:'Double Cheeseburger', descriptionAr:'برغر مزدوج مع شريحتي لحم، جبن مضاعف وصلصة خاصة', descriptionFr:'Double steak haché, double cheddar fondu et sauce maison', emoji:'🍔', basePrice:350, sizes:[], addons:[], available:true, featured:false, isPlaceholder:false, order:2 },
+
+      { id:'sandwich-poulet', category:'sandwichs', nameAr:'ساندويش دجاج', nameFr:'Sandwich Poulet', descriptionAr:'ساندويش مع دجاج مشوي وخضروات طازجة', descriptionFr:'Sandwich au poulet grillé, légumes frais et sauce maison', emoji:'🥙', basePrice:300, sizes:[], addons:[], available:true, featured:false, isPlaceholder:false, order:1 },
+      { id:'sandwich-poulet-crispy', category:'sandwichs', nameAr:'ساندويش دجاج كريسبي', nameFr:'Sandwich Poulet Crispy', descriptionAr:'ساندويش مع دجاج مقرمش مقلي وخضروات طازجة', descriptionFr:'Sandwich au poulet croustillant, légumes frais et sauce maison', emoji:'🥙', basePrice:450, sizes:[], addons:[], available:true, featured:true, isPlaceholder:false, order:2 },
+      { id:'sandwich-viande', category:'sandwichs', nameAr:'ساندويش لحم', nameFr:'Sandwich Viande', descriptionAr:'ساندويش مع لحم بقري مشوي وخضروات طازجة', descriptionFr:'Sandwich à la viande hachée grillée et légumes frais', emoji:'🥙', basePrice:350, sizes:[], addons:[], available:true, featured:false, isPlaceholder:false, order:3 },
+      { id:'sandwich-mixte', category:'sandwichs', nameAr:'ساندويش مشكّل', nameFr:'Sandwich Mixte', descriptionAr:'ساندويش مع دجاج ولحم معاً، خضروات طازجة وصلصة', descriptionFr:'Sandwich mixte poulet et viande, légumes frais et sauce maison', emoji:'🥙', basePrice:450, sizes:[], addons:[], available:true, featured:false, isPlaceholder:false, order:4 },
+
+      { id:'poutine-poulet', category:'poutines', nameAr:'بوتين دجاج', nameFr:'Poutine Poulet', descriptionAr:'بطاطس مقلية مع دجاج مشوي وصلصة خاصة', descriptionFr:'Frites maison avec poulet grillé et sauce spéciale', emoji:'🍟', basePrice:450, sizes:[], addons:[], available:true, featured:false, isPlaceholder:false, order:1 },
+      { id:'poutine-poulet-crispy', category:'poutines', nameAr:'بوتين دجاج كريسبي', nameFr:'Poutine Poulet Crispy', descriptionAr:'بطاطس مقلية مع دجاج مقرمش وصلصة خاصة', descriptionFr:'Frites maison avec poulet croustillant et sauce spéciale', emoji:'🍟', basePrice:500, sizes:[], addons:[], available:true, featured:true, isPlaceholder:false, order:2 },
+      { id:'poutine-viande', category:'poutines', nameAr:'بوتين لحم', nameFr:'Poutine Viande', descriptionAr:'بطاطس مقلية مع لحم بقري مشوي وصلصة خاصة', descriptionFr:'Frites maison avec viande grillée et sauce spéciale', emoji:'🍟', basePrice:550, sizes:[], addons:[], available:true, featured:false, isPlaceholder:false, order:3 },
+      { id:'poutine-mixte', category:'poutines', nameAr:'بوتين مشكّل', nameFr:'Poutine Mixte', descriptionAr:'بطاطس مقلية مع دجاج ولحم معاً وصلصة خاصة', descriptionFr:'Frites maison avec poulet et viande mixte, sauce spéciale', emoji:'🍟', basePrice:600, sizes:[], addons:[], available:true, featured:false, isPlaceholder:false, order:4 },
+
+      { id:'crepe-nutella', category:'crepes', nameAr:'كريب نوتيلا', nameFr:'Crêpe Nutella', descriptionAr:'⚠️ منتج تجريبي — سيتم تحديثه عند استلام القائمة النهائية', descriptionFr:'⚠️ Produit temporaire — sera mis à jour à réception du menu final', emoji:'🥞', basePrice:null, sizes:[], addons:[], available:true, featured:false, isPlaceholder:true, order:1 },
+      { id:'crepe-fraise', category:'crepes', nameAr:'كريب فراولة', nameFr:'Crêpe Fraise', descriptionAr:'⚠️ منتج تجريبي — سيتم تحديثه عند استلام القائمة النهائية', descriptionFr:'⚠️ Produit temporaire — sera mis à jour à réception du menu final', emoji:'🥞', basePrice:null, sizes:[], addons:[], available:true, featured:false, isPlaceholder:true, order:2 },
+      { id:'crepe-banane', category:'crepes', nameAr:'كريب موز', nameFr:'Crêpe Banane', descriptionAr:'⚠️ منتج تجريبي — سيتم تحديثه عند استلام القائمة النهائية', descriptionFr:'⚠️ Produit temporaire — sera mis à jour à réception du menu final', emoji:'🥞', basePrice:null, sizes:[], addons:[], available:true, featured:false, isPlaceholder:true, order:3 },
+
+      { id:'hamoud-cola', category:'boissons', nameAr:'حمود كولا', nameFr:'Hamoud Cola', descriptionAr:'مشروب غازي', descriptionFr:'Boisson gazeuse', emoji:'🥤', basePrice:70, sizes:[], addons:[], available:true, featured:false, isPlaceholder:false, order:1 },
+      { id:'hamoud-blanche', category:'boissons', nameAr:'حمود بلانش', nameFr:'Hamoud Blanche', descriptionAr:'مشروب غازي بطعم الليمون', descriptionFr:'Boisson gazeuse au citron', emoji:'🥤', basePrice:70, sizes:[], addons:[], available:true, featured:false, isPlaceholder:false, order:2 },
+      { id:'slim-orange', category:'boissons', nameAr:'سليم أورانج', nameFr:'Slim Orange', descriptionAr:'عصير برتقال غازي', descriptionFr:'Jus d\'orange gazeux', emoji:'🧃', basePrice:70, sizes:[], addons:[], available:true, featured:false, isPlaceholder:false, order:3 },
+      { id:'selecto', category:'boissons', nameAr:'سيلكتو', nameFr:'Selecto', descriptionAr:'مشروب غازي بالفانيليا', descriptionFr:'Boisson gazeuse à la vanille', emoji:'🥤', basePrice:70, sizes:[], addons:[], available:true, featured:false, isPlaceholder:false, order:4 },
+      { id:'jus-local', category:'boissons', nameAr:'عصير طبيعي', nameFr:'Jus de fruit local', descriptionAr:'مشروب طبيعي بالفواكه المحلية', descriptionFr:'Boisson naturelle aux fruits locaux', emoji:'🧃', basePrice:70, sizes:[], addons:[], available:true, featured:false, isPlaceholder:false, order:5 },
+      { id:'coca-cola', category:'boissons', nameAr:'كوكا كولا', nameFr:'Coca-Cola', descriptionAr:'⚠️ السعر قيد التأكيد', descriptionFr:'⚠️ Prix à confirmer', emoji:'🥤', basePrice:null, sizes:[], addons:[], available:true, featured:false, isPlaceholder:true, order:6 },
+      { id:'pepsi', category:'boissons', nameAr:'بيبسي', nameFr:'Pepsi', descriptionAr:'⚠️ السعر قيد التأكيد', descriptionFr:'⚠️ Prix à confirmer', emoji:'🥤', basePrice:null, sizes:[], addons:[], available:true, featured:false, isPlaceholder:true, order:7 },
+    ];
+
+    let PRODUCTS = [];
+    const PRODUCTS_STORAGE_KEY = 'cv_admin_products';
+
+    function loadProducts() {
+      try {
+        const raw = localStorage.getItem(PRODUCTS_STORAGE_KEY);
+        if (raw) { PRODUCTS = JSON.parse(raw); return; }
+      } catch (e) {}
+      PRODUCTS = JSON.parse(JSON.stringify(DEFAULT_PRODUCTS));
+      saveProducts();
+    }
+    function saveProducts() {
+      try { localStorage.setItem(PRODUCTS_STORAGE_KEY, JSON.stringify(PRODUCTS)); } catch (e) {}
+    }
+    function resetProductsToDefaults() {
+      const isFr = currentAdminLang === 'fr';
+      const msg = isFr
+        ? 'Réinitialiser les produits à la liste par défaut du site ? Toutes vos modifications locales seront perdues.'
+        : 'إعادة ضبط المنتجات إلى قائمة الموقع الافتراضية؟ سيتم فقدان كل تعديلاتك المحلية.';
+      if (!window.confirm(msg)) return;
+      PRODUCTS = JSON.parse(JSON.stringify(DEFAULT_PRODUCTS));
+      saveProducts();
+      renderAllDynamicContent();
+      showAdminToast(isFr ? 'Réinitialisé' : 'تمت إعادة الضبط');
+    }
+
+    /* ================================================
+       OFFERS STORE (Phase 5 Part 2 — Step 4)
+       Converted from the read-only OFFERS_SNAPSHOT (Part 1) into
+       a live, editable store — same pattern already established
+       by PRODUCTS (Step 2) and CATEGORIES (Step 3):
+       - DEFAULT_OFFERS is a faithful starting point built from the
+         original 4 demo offers (emoji, gradient, nameAr/Fr,
+         price/original preserved), extended with the extra fields
+         this step's CRUD needs: id, descriptionAr/Fr, linkedCategory
+         (optional — references the existing CATEGORIES store, purely
+         informational, mirrors the "an offer is built from an existing
+         menu category" idea described for index.html's OFFERS without
+         inventing a new cross-file linking system), isDemoOffer (the
+         demo-vs-real marker, see "Compliance Fix" in Phase 4 Part 1)
+         and available (enable/disable), plus an `order` for stable
+         sorting.
+       - OFFERS is seeded from DEFAULT_OFFERS into localStorage under
+         'cv_admin_offers' on first run, exactly like products/categories.
+       - Every add/edit/delete/enable-toggle mutates the array and
+         re-persists immediately.
+       - Discount percentage is never stored — it is always derived
+         from originalPrice/basePrice (see offerDiscountPercent()),
+         matching how index.html's customer-facing offer cards already
+         auto-compute their discount ribbon from those two fields.
+       - Still local-browser-only; no live bridge to index.html and no
+         effect on the customer site's cart/checkout/WhatsApp flow
+         (Phase 6 scope, same limitation as PRODUCTS/CATEGORIES).
+    ================================================ */
+    const DEFAULT_OFFERS = [
+      { id: 'offer-tacos-boisson', emoji: '🌮', gradient: 'linear-gradient(135deg,#1a3a2e,#2d6048)',
+        nameAr: 'منيو تاكوس + مشروب', nameFr: 'Menu Tacos + Boisson',
+        descriptionAr: 'تاكوس مع مشروب غازي بسعر خاص', descriptionFr: 'Un tacos accompagné d\'une boisson gazeuse à prix spécial',
+        basePrice: 470, originalPrice: 520, linkedCategory: 'tacos', isDemoOffer: true, available: true, order: 1 },
+      { id: 'offer-duo-burger', emoji: '🍔', gradient: 'linear-gradient(135deg,#8b2020,#c8102e)',
+        nameAr: 'ديو برغر', nameFr: 'Duo Burger',
+        descriptionAr: 'صحن مزدوج من البرغر لمشاركة الطعم مع صديق', descriptionFr: 'Deux burgers à partager, prix réduit pour le duo',
+        basePrice: 420, originalPrice: 500, linkedCategory: 'burgers', isDemoOffer: true, available: true, order: 2 },
+      { id: 'offer-sandwich-poutine', emoji: '🥙', gradient: 'linear-gradient(135deg,#a07830,#d4a853)',
+        nameAr: 'ساندويش + بوتين', nameFr: 'Sandwich + Poutine',
+        descriptionAr: 'ساندويش مع طبق بوتين بسعر مخفض', descriptionFr: 'Un sandwich accompagné d\'une poutine à prix réduit',
+        basePrice: 750, originalPrice: 900, linkedCategory: 'sandwichs', isDemoOffer: true, available: true, order: 3 },
+      { id: 'offer-pack-famille', emoji: '🎉', gradient: 'linear-gradient(135deg,#7a1a40,#c4406a)',
+        nameAr: 'باك العائلة', nameFr: 'Pack Famille',
+        descriptionAr: 'باك مخصص للعائلة يجمع عدة أصناف بسعر مميز', descriptionFr: 'Un pack pensé pour la famille, plusieurs articles à prix avantageux',
+        basePrice: 999, originalPrice: 1240, linkedCategory: null, isDemoOffer: true, available: true, order: 4 },
+    ];
+
+    let OFFERS = [];
+    const OFFERS_STORAGE_KEY = 'cv_admin_offers';
+
+    function loadOffers() {
+      try {
+        const raw = localStorage.getItem(OFFERS_STORAGE_KEY);
+        if (raw) { OFFERS = JSON.parse(raw); return; }
+      } catch (e) {}
+      OFFERS = JSON.parse(JSON.stringify(DEFAULT_OFFERS));
+      saveOffers();
+    }
+    function saveOffers() {
+      try { localStorage.setItem(OFFERS_STORAGE_KEY, JSON.stringify(OFFERS)); } catch (e) {}
+    }
+    function resetOffersToDefaults() {
+      const isFr = currentAdminLang === 'fr';
+      const msg = isFr
+        ? 'Réinitialiser les offres à la liste de démonstration par défaut ? Toutes vos modifications locales seront perdues.'
+        : 'إعادة ضبط العروض إلى القائمة التجريبية الافتراضية؟ سيتم فقدان كل تعديلاتك المحلية.';
+      if (!window.confirm(msg)) return;
+      OFFERS = JSON.parse(JSON.stringify(DEFAULT_OFFERS));
+      saveOffers();
+      renderAllDynamicContent();
+      showAdminToast(isFr ? 'Réinitialisé' : 'تمت إعادة الضبط');
+    }
+    function sortedOffers() { return [...OFFERS].sort((a, b) => (a.order || 0) - (b.order || 0)); }
+    function activeOffersCount() { return OFFERS.filter(o => o.available !== false).length; }
+    /* Discount % is always derived, never stored — only meaningful when
+       the original price is actually higher than the offer price. */
+    function offerDiscountPercent(o) {
+      if (!o.originalPrice || !o.basePrice || o.originalPrice <= o.basePrice) return null;
+      return Math.round((1 - o.basePrice / o.originalPrice) * 100);
+    }
+
+    /* ================================================
+       ORDERS STORE (Phase 5 Part 2 — Step 5)
+       IMPORTANT: real customer orders are NOT stored anywhere —
+       they arrive exclusively via WhatsApp (see index.html's
+       checkout flow, sendWhatsAppOrder()). No backend/database
+       exists to capture them automatically. This store is
+       therefore, and will remain, 100% synthetic demo data —
+       fully labeled as such (see the amber warning banner and
+       the "تجريبي بالكامل / Entièrement démo" pill on this view).
+       Its purpose is only to demonstrate what an orders
+       management screen *would* look like once a real backend
+       exists (Phase 6 scope).
+       - DEFAULT_ORDERS is a fixed, realistic-looking set of 8
+         demo orders spanning all 4 statuses (pending, preparing,
+         done, cancelled) and both fulfilment methods, built from
+         real product/offer names so totals are self-consistent.
+       - ORDERS is seeded from DEFAULT_ORDERS into localStorage
+         under 'cv_admin_orders' on first run — same pattern as
+         PRODUCTS/CATEGORIES/OFFERS.
+       - The ONLY mutation this step allows is changing an order's
+         `status` (pending/preparing/done/cancelled), via the
+         quick-select in the table row or the detail modal. There
+         is no add/edit/delete for orders — inventing new demo
+         orders or editing customer/item data would misrepresent
+         them as real, which the brief explicitly prohibits.
+       - Every status change re-persists immediately and is purely
+         local to this browser; it never touches a real order,
+         because no real order data exists here to touch.
+    ================================================ */
+    const DEFAULT_ORDERS = [
+      { id: 'order-1008', createdAt: '2026-08-13T11:10:00',
+        customerAr: 'لينة سعدي', customerFr: 'Lina Saadi', phone: '0770 55 66 77',
+        method: 'delivery', address: 'حي الفتح، بريان',
+        items: [
+          { emoji: '🍔', nameAr: 'دبل تشيزبرغر', nameFr: 'Double Cheeseburger', qty: 1, unitPrice: 350 },
+          { emoji: '🥙', nameAr: 'ساندويش لحم', nameFr: 'Sandwich Viande', qty: 1, unitPrice: 350 },
+        ],
+        deliveryFee: 200, status: 'pending' },
+      { id: 'order-1007', createdAt: '2026-08-13T08:55:00',
+        customerAr: 'بلال مزيان', customerFr: 'Bilal Meziane', phone: '0661 22 33 44',
+        method: 'pickup', address: '',
+        items: [
+          { emoji: '🌮', nameAr: 'منيو تاكوس + مشروب', nameFr: 'Menu Tacos + Boisson', qty: 1, unitPrice: 470 },
+        ],
+        deliveryFee: 0, status: 'preparing' },
+      { id: 'order-1006', createdAt: '2026-08-11T20:15:00',
+        customerAr: 'أمال بوضياف', customerFr: 'Amel Boudiaf', phone: '0559 88 77 66',
+        method: 'delivery', address: 'حي السلام، بريان',
+        items: [
+          { emoji: '🍔', nameAr: 'تشيزبرغر', nameFr: 'Cheeseburger', qty: 2, unitPrice: 250 },
+          { emoji: '🍟', nameAr: 'بوتين دجاج كريسبي', nameFr: 'Poutine Poulet Crispy', qty: 1, unitPrice: 500 },
+        ],
+        deliveryFee: 200, status: 'cancelled' },
+      { id: 'order-1005', createdAt: '2026-08-13T10:02:00',
+        customerAr: 'كريم زروقي', customerFr: 'Karim Zerrouki', phone: '0698 11 22 44',
+        method: 'pickup', address: '',
+        items: [
+          { emoji: '🌮', nameAr: 'تاكوس دجاج', nameFr: 'Tacos Poulet', qty: 1, unitPrice: 450 },
+        ],
+        deliveryFee: 0, status: 'pending' },
+      { id: 'order-1004', createdAt: '2026-08-12T18:20:00',
+        customerAr: 'نور شريف', customerFr: 'Nour Cherif', phone: '0550 99 88 77',
+        method: 'pickup', address: '',
+        items: [
+          { emoji: '🥙', nameAr: 'ساندويش + بوتين', nameFr: 'Sandwich + Poutine', qty: 1, unitPrice: 750 },
+          { emoji: '🧃', nameAr: 'سليم أورانج', nameFr: 'Slim Orange', qty: 1, unitPrice: 70 },
+        ],
+        deliveryFee: 0, status: 'done' },
+      { id: 'order-1003', createdAt: '2026-08-12T19:05:00',
+        customerAr: 'يوسف حداد', customerFr: 'Youcef Haddad', phone: '0770 11 22 33',
+        method: 'delivery', address: 'شارع الاستقلال، بريان',
+        items: [
+          { emoji: '🎉', nameAr: 'باك العائلة', nameFr: 'Pack Famille', qty: 1, unitPrice: 999 },
+        ],
+        deliveryFee: 200, status: 'done' },
+      { id: 'order-1002', createdAt: '2026-08-13T09:40:00',
+        customerAr: 'سارة عمراني', customerFr: 'Sara Amrani', phone: '0661 98 76 54',
+        method: 'delivery', address: 'حي النصر، بريان',
+        items: [
+          { emoji: '🍔', nameAr: 'ديو برغر', nameFr: 'Duo Burger', qty: 1, unitPrice: 420 },
+          { emoji: '🥙', nameAr: 'ساندويش دجاج كريسبي', nameFr: 'Sandwich Poulet Crispy', qty: 1, unitPrice: 450 },
+        ],
+        deliveryFee: 200, status: 'preparing' },
+      { id: 'order-1001', createdAt: '2026-08-13T09:12:00',
+        customerAr: 'أحمد بلقاسم', customerFr: 'Ahmed Belkacem', phone: '0559 12 34 56',
+        method: 'pickup', address: '',
+        items: [
+          { emoji: '🌮', nameAr: 'تاكوس دجاج', nameFr: 'Tacos Poulet', qty: 1, unitPrice: 700 },
+          { emoji: '🥤', nameAr: 'حمود كولا', nameFr: 'Hamoud Cola', qty: 2, unitPrice: 70 },
+        ],
+        deliveryFee: 0, status: 'pending' },
+    ];
+
+    let ORDERS = [];
+    const ORDERS_STORAGE_KEY = 'cv_admin_orders';
+    let orderSearchQuery = '';
+    let orderStatusFilter = 'all';
+
+    function loadOrders() {
+      try {
+        const raw = localStorage.getItem(ORDERS_STORAGE_KEY);
+        if (raw) { ORDERS = JSON.parse(raw); return; }
+      } catch (e) {}
+      ORDERS = JSON.parse(JSON.stringify(DEFAULT_ORDERS));
+      saveOrders();
+    }
+    function saveOrders() {
+      try { localStorage.setItem(ORDERS_STORAGE_KEY, JSON.stringify(ORDERS)); } catch (e) {}
+    }
+    function resetOrdersToDefaults() {
+      const isFr = currentAdminLang === 'fr';
+      const msg = isFr
+        ? 'Réinitialiser les commandes de démonstration ? Tous les changements de statut locaux seront perdus.'
+        : 'إعادة ضبط الطلبات التجريبية؟ سيتم فقدان كل تعديلات الحالة المحلية.';
+      if (!window.confirm(msg)) return;
+      ORDERS = JSON.parse(JSON.stringify(DEFAULT_ORDERS));
+      saveOrders();
+      renderAllDynamicContent();
+      showAdminToast(isFr ? 'Réinitialisé' : 'تمت إعادة الضبط');
+    }
+
+    function orderSubtotal(o) { return o.items.reduce((s, it) => s + it.unitPrice * it.qty, 0); }
+    function orderTotal(o) { return orderSubtotal(o) + (o.deliveryFee || 0); }
+    function sortedOrders() { return [...ORDERS].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)); }
+    function filteredOrders() {
+      let list = sortedOrders();
+      if (orderStatusFilter !== 'all') list = list.filter(o => o.status === orderStatusFilter);
+      const q = orderSearchQuery.trim().toLowerCase();
+      if (q) {
+        list = list.filter(o => {
+          const nameA = (o.customerAr || '').toLowerCase();
+          const nameF = (o.customerFr || '').toLowerCase();
+          const phone = (o.phone || '').toLowerCase();
+          const id = (o.id || '').toLowerCase();
+          return nameA.includes(q) || nameF.includes(q) || phone.includes(q) || id.includes(q);
+        });
+      }
+      return list;
+    }
+    /* "Today"/"pending" stat-card counts, derived live from ORDERS —
+       still tagged with the demo pill in renderStatCards(), since the
+       underlying data is 100% synthetic (see note above). */
+    function todayOrdersCount() { return ORDERS.length; }
+    function pendingOrdersCount() { return ORDERS.filter(o => o.status === 'pending').length; }
+
+    function formatOrderDate(iso) {
+      const d = new Date(iso);
+      if (isNaN(d.getTime())) return '';
+      const dd = String(d.getDate()).padStart(2, '0');
+      const mm = String(d.getMonth() + 1).padStart(2, '0');
+      const yyyy = d.getFullYear();
+      const hh = String(d.getHours()).padStart(2, '0');
+      const min = String(d.getMinutes()).padStart(2, '0');
+      return `${dd}/${mm}/${yyyy} — ${hh}:${min}`;
+    }
+
+    function orderItemsSummary(o, isFr) {
+      if (!o.items || !o.items.length) return '';
+      const first = o.items[0];
+      const firstName = isFr ? first.nameFr : first.nameAr;
+      const label = `${first.emoji} ${firstName} × ${first.qty}`;
+      if (o.items.length === 1) return label;
+      const more = o.items.length - 1;
+      const moreLabel = isFr ? `+${more} article${more > 1 ? 's' : ''}` : `+${more} عنصر آخر`;
+      return `${label} <span class="admin-table__muted">${moreLabel}</span>`;
+    }
+
+    /* ================================================
+       SETTINGS STORE (Phase 5 Part 2 — Step 6)
+       Converted from the read-only SETTINGS_SNAPSHOT (Part 1)
+       into a live, editable store — same pattern already
+       established by PRODUCTS, CATEGORIES, OFFERS, and ORDERS:
+       - DEFAULT_SETTINGS is the faithful snapshot of index.html's
+         three configurable values (delivery fee, WhatsApp number,
+         delivery zone AR/FR), preserved exactly.
+       - SETTINGS is seeded from DEFAULT_SETTINGS into localStorage
+         under 'cv_admin_settings' on first run.
+       - Saving writes immediately; reset restores defaults behind
+         a confirm prompt.
+       - Still local-browser-only; no live bridge to index.html
+         (Phase 6 scope, same limitation as all other stores). The
+         note under the panel states this explicitly in both languages.
+       - The WhatsApp number is stored as-is (display format with
+         spaces/+) and displayed exactly as entered — it is only an
+         informational label here; the actual wa.me link in index.html
+         is a separate hardcoded constant not touched by this step.
+    ================================================ */
+    const DEFAULT_SETTINGS = {
+      deliveryFee: 200,
+      waNumber: '+213 776 81 48 76',
+      deliveryZone: { ar: 'داخل بريان فقط', fr: 'Berriane uniquement' },
+    };
+
+    let SETTINGS = {};
+    const SETTINGS_STORAGE_KEY = 'cv_admin_settings';
+
+    function loadSettings() {
+      try {
+        const raw = localStorage.getItem(SETTINGS_STORAGE_KEY);
+        if (raw) { SETTINGS = JSON.parse(raw); return; }
+      } catch (e) {}
+      SETTINGS = JSON.parse(JSON.stringify(DEFAULT_SETTINGS));
+      saveSettings();
+    }
+    function saveSettings() {
+      try { localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(SETTINGS)); } catch (e) {}
+    }
+    function resetSettingsToDefaults() {
+      const isFr = currentAdminLang === 'fr';
+      const msg = isFr
+        ? 'Réinitialiser les paramètres aux valeurs par défaut ? Vos modifications locales seront perdues.'
+        : 'إعادة ضبط الإعدادات إلى القيم الافتراضية؟ سيتم فقدان كل تعديلاتك المحلية.';
+      if (!window.confirm(msg)) return;
+      SETTINGS = JSON.parse(JSON.stringify(DEFAULT_SETTINGS));
+      saveSettings();
+      renderAllDynamicContent();
+      showAdminToast(isFr ? 'Réinitialisé' : 'تمت إعادة الضبط');
+    }
+
+
+
+    function totalProducts() { return PRODUCTS.length; }       /* live count — updates as products are added/removed */
+
+    /* ================================================
+       LOCALIZATION
+       Same id-driven pattern as index.html's translations
+       object, kept as a fully separate dictionary/localStorage
+       key so this page never interferes with the customer
+       site's language state.
+    ================================================ */
+    const adminT = {
+      ar: {
+        dir: 'rtl', lang: 'ar',
+        'admin-brand-sub':        'لوحة التحكم',
+        'admin-version-tag':      'إدارة المنتجات والفئات والعروض والطلبات والإعدادات — الجزء 2 / الخطوة 6',
+        'nav-label-home':         'الرئيسية',
+        'nav-label-products':     'المنتجات',
+        'nav-label-categories':   'الفئات',
+        'nav-label-offers':       'العروض',
+        'nav-label-orders':       'الطلبات',
+        'nav-label-settings':     'الإعدادات',
+        'home-subtitle':          'نظرة سريعة على متجرك',
+        'home-cat-breakdown-title':'توزيع المنتجات حسب الفئة',
+        'home-note-text':         'هذه اللوحة هي الأساس فقط. الإضافة والتعديل والحذف لكل قسم ستتوفر في الأجزاء القادمة من هذه المرحلة.',
+        'products-subtitle':      'عرض للقراءة فقط لكل المنتجات الحالية على الموقع',
+        'products-panel-title':   'كل المنتجات',
+        'categories-subtitle':    'الفئات الحالية في قائمة الطعام',
+        'categories-panel-title': 'الفئات',
+        'categories-note-text':   'التغييرات هنا محفوظة في هذا المتصفح فقط (localStorage) ولا تُعدّل موقع الزبائن مباشرة بعد.',
+        'offers-subtitle-admin':  'العروض الحالية المعروضة للزبائن',
+        'offers-panel-title':     'العروض',
+        'orders-subtitle':        'متابعة طلبات الزبائن',
+        'orders-warn-text':       'لا يوجد بعد نظام حقيقي لتسجيل الطلبات — طلبات الزبائن تصل حالياً عبر واتساب فقط. الجدول أدناه بيانات تجريبية للتوضيح فقط.',
+        'orders-panel-title':     'طلبات تجريبية',
+        'settings-subtitle':      'الإعدادات الحالية للمتجر — قابلة للتعديل',
+        'settings-panel-title':   'إعدادات المتجر',
+        'settings-note-text':     'التغييرات هنا محفوظة في هذا المتصفح فقط (localStorage) ولا تُعدّل موقع الزبائن مباشرة بعد.',
+        'pill-live-1': 'مباشر — من بيانات الموقع',
+        'pill-live-2': 'مباشر — من بيانات الموقع',
+        'pill-live-3': 'مباشر — من بيانات الموقع',
+        'pill-live-4': 'مباشر — القيم الفعلية بالموقع',
+        'pill-demo-2': 'تجريبي بالكامل',
+        statTotalProducts: 'إجمالي المنتجات',
+        statActiveOffers:  'العروض النشطة',
+        statTodayOrders:   'طلبات اليوم',
+        statPendingOrders: 'الطلبات المعلّقة',
+        thCategory: 'الفئة', thName: 'المنتج', thPrice: 'السعر', thStatus: 'الحالة',
+        thCustomer: 'الزبون', thItem: 'الطلب', thTotal: 'الإجمالي',
+        statusAvailable: 'متاح', statusPlaceholder: 'مؤقت',
+        statusEnabled: 'مفعّلة', statusDisabled: 'معطّلة',
+        statusPending: 'قيد الانتظار', statusPreparing: 'قيد التحضير', statusDone: 'مكتمل',
+        offerFrom: 'بدلاً من', itemsLabel: 'عنصر',
+        settingsDeliveryFee: 'رسوم التوصيل', settingsDeliveryFeeHint: 'تُضاف تلقائياً عند اختيار التوصيل في السلة',
+        settingsWaNumber: 'رقم واتساب المتجر', settingsWaNumberHint: 'الرقم المستخدم في زر إرسال الطلب',
+        settingsZone: 'منطقة التوصيل', settingsZoneHint: 'خارج هذه المنطقة، يظهر خيار الاستلام من المحل فقط',
+        /* Phase 5 Part 2 — Step 2: Product management */
+        'products-note-text':      'التغييرات هنا محفوظة في هذا المتصفح فقط (localStorage) ولا تُعدّل موقع الزبائن مباشرة بعد.',
+        'btn-add-product-label':   'إضافة منتج',
+        'btn-reset-products-label':'إعادة الضبط',
+        'pm-label-category':       'الفئة',
+        'pm-label-emoji':          'الرمز التعبيري',
+        'pm-label-name-ar':        'الاسم (عربي)',
+        'pm-label-name-fr':        'الاسم (فرنسي)',
+        'pm-label-desc-ar':        'الوصف (عربي)',
+        'pm-label-desc-fr':        'الوصف (فرنسي)',
+        'pm-label-placeholder-chk':'السعر غير مؤكد بعد (منتج مؤقت)',
+        'pm-label-price':          'السعر (دج)',
+        'pm-price-hint':           'إذا كان للمنتج أحجام متعددة (مثل التاكوس)، فهذا الحقل يُعدّل السعر الأساسي فقط — الأحجام الحالية تبقى كما هي.',
+        'pm-label-available-chk':  'متاح للطلب',
+        'pm-label-featured-chk':   'الأكثر طلباً (مميز)',
+        'pm-btn-cancel':           'إلغاء',
+        'pm-btn-save':             'حفظ',
+        pmAddTitle:      'إضافة منتج',
+        pmEditTitle:     'تعديل منتج',
+        pmErrNameAr:     'الرجاء إدخال الاسم بالعربية',
+        pmErrNameFr:     'الرجاء إدخال الاسم بالفرنسية',
+        pmErrPrice:      'الرجاء إدخال سعر صحيح',
+        pmErrCategory:   'الرجاء اختيار فئة',
+        pmDeleteConfirm: 'هل أنت متأكد من حذف هذا المنتج؟ لا يمكن التراجع عن هذا الإجراء.',
+        toastAdded:      'تمت إضافة المنتج',
+        toastUpdated:    'تم تحديث المنتج',
+        toastDeleted:    'تم حذف المنتج',
+        emojiPlaceholder:'🍔',
+        /* Phase 5 Part 2 — Step 3: Category management */
+        'btn-add-category-label':   'إضافة فئة',
+        'btn-reset-categories-label':'إعادة الضبط',
+        'cm-label-name-ar':          'الاسم (عربي)',
+        'cm-label-name-fr':          'الاسم (فرنسي)',
+        'cm-label-emoji':            'الرمز التعبيري',
+        'cm-label-enabled-chk':      'فئة مفعّلة',
+        'cm-enabled-hint':           'الفئات المعطّلة تبقى محفوظة مع منتجاتها لكنها تُعرض كمعطّلة في اللوحة.',
+        'cm-btn-cancel':             'إلغاء',
+        'cm-btn-save':               'حفظ',
+        cmAddTitle:      'إضافة فئة',
+        cmEditTitle:     'تعديل فئة',
+        cmErrNameAr:     'الرجاء إدخال الاسم بالعربية',
+        cmErrNameFr:     'الرجاء إدخال الاسم بالفرنسية',
+        cmDeleteConfirm: 'هل أنت متأكد من حذف هذه الفئة؟ لا يمكن التراجع عن هذا الإجراء.',
+        cmDeleteBlocked: 'لا يمكن حذف هذه الفئة لأنها تحتوي على {count} منتج. الرجاء نقل أو حذف منتجاتها أولاً.',
+        toastCategoryAdded:    'تمت إضافة الفئة',
+        toastCategoryUpdated:  'تم تحديث الفئة',
+        toastCategoryDeleted:  'تم حذف الفئة',
+        toastCategoryEnabled:  'تم تفعيل الفئة',
+        toastCategoryDisabled: 'تم تعطيل الفئة',
+        /* Phase 5 Part 2 — Step 4: Offer management */
+        'pill-live-5':                'مباشر — من بيانات الموقع',
+        'offers-note-text':           'التغييرات هنا محفوظة في هذا المتصفح فقط (localStorage) ولا تُعدّل موقع الزبائن مباشرة بعد. العروض المعلّمة "تجريبي" هي أمثلة توضيحية فقط.',
+        'btn-add-offer-label':        'إضافة عرض',
+        'btn-reset-offers-label':     'إعادة الضبط',
+        'om-label-emoji':             'الرمز التعبيري (صورة مؤقتة)',
+        'om-label-linked-category':   'فئة مرتبطة (اختياري)',
+        'om-label-name-ar':           'الاسم (عربي)',
+        'om-label-name-fr':           'الاسم (فرنسي)',
+        'om-label-desc-ar':           'الوصف (عربي)',
+        'om-label-desc-fr':           'الوصف (فرنسي)',
+        'om-label-original-price':    'السعر الأصلي (دج)',
+        'om-label-price':             'سعر العرض (دج)',
+        'om-discount-hint':           'نسبة الخصم تُحسب تلقائياً من السعر الأصلي وسعر العرض.',
+        'om-label-demo-chk':          'عرض تجريبي (للعرض فقط)',
+        'om-label-available-chk':     'عرض مفعّل',
+        'om-btn-cancel':              'إلغاء',
+        'om-btn-save':                'حفظ',
+        omAddTitle:      'إضافة عرض',
+        omEditTitle:     'تعديل عرض',
+        omErrNameAr:     'الرجاء إدخال الاسم بالعربية',
+        omErrNameFr:     'الرجاء إدخال الاسم بالفرنسية',
+        omErrPrice:      'الرجاء إدخال سعر عرض صحيح',
+        omErrOriginalPrice: 'الرجاء إدخال السعر الأصلي',
+        omErrOriginalLessThanPrice: 'يجب أن يكون السعر الأصلي أكبر من أو يساوي سعر العرض',
+        omDeleteConfirm: 'هل أنت متأكد من حذف هذا العرض؟ لا يمكن التراجع عن هذا الإجراء.',
+        toastOfferAdded:    'تمت إضافة العرض',
+        toastOfferUpdated:  'تم تحديث العرض',
+        toastOfferDeleted:  'تم حذف العرض',
+        toastOfferEnabled:  'تم تفعيل العرض',
+        toastOfferDisabled: 'تم تعطيل العرض',
+        /* Phase 5 Part 2 — Step 5: Orders management */
+        'btn-reset-orders-label':  'إعادة الضبط',
+        'orders-note-text':        'تغييرات حالة الطلب هنا محفوظة في هذا المتصفح فقط (localStorage) ولأغراض العرض التوضيحي فقط — لا يوجد نظام طلبات حقيقي متصل بعد.',
+        statusCancelled: 'ملغى',
+        orderFilterAll: 'كل الحالات',
+        orderSearchPlaceholder: 'بحث بالاسم أو الهاتف أو رقم الطلب…',
+        methodPickup: 'استلام بالمحل',
+        methodDelivery: 'توصيل',
+        thItems: 'المنتجات',
+        thMethod: 'الطريقة',
+        thOrderId: 'رقم الطلب',
+        ordmTitle: 'تفاصيل الطلب',
+        ordmSectionCustomer: 'معلومات العميل',
+        ordmSectionItems: 'المنتجات',
+        ordmLabelStatus: 'حالة الطلب',
+        ordmLabelAddress: 'العنوان',
+        ordmLabelSubtotal: 'المجموع الفرعي',
+        ordmLabelDelivery: 'رسوم التوصيل',
+        ordmLabelTotal: 'الإجمالي',
+        ordmHint: 'تغيير الحالة محفوظ محلياً فقط (لأغراض العرض التوضيحي) ولا يرسل أي إشعار حقيقي للزبون.',
+        ordmBtnClose: 'إغلاق',
+        toastOrderStatusUpdated: 'تم تحديث حالة الطلب',
+        ordersEmptySearch: 'لا توجد طلبات مطابقة لبحثك.',
+        /* Phase 5 Part 2 — Step 6: Settings CRUD */
+        'btn-reset-settings-label':  'إعادة الضبط',
+        'btn-edit-settings-label':   'تعديل الإعدادات',
+        'sm-label-delivery-fee':     'رسوم التوصيل (دج)',
+        'sm-hint-delivery-fee':      'تُضاف تلقائياً عند اختيار التوصيل في السلة',
+        'sm-label-wa-number':        'رقم واتساب المتجر',
+        'sm-hint-wa-number':         'الرقم المستخدم في زر إرسال الطلب عبر واتساب',
+        'sm-label-zone-ar':          'منطقة التوصيل (عربي)',
+        'sm-label-zone-fr':          'منطقة التوصيل (فرنسي)',
+        'sm-hint-zone':              'خارج هذه المنطقة، يظهر خيار الاستلام من المحل فقط',
+        'sm-btn-cancel':             'إلغاء',
+        'sm-btn-save':               'حفظ',
+        smModalTitle:    'تعديل الإعدادات',
+        smErrFee:        'الرجاء إدخال رسوم توصيل صحيحة (0 أو أكثر)',
+        smErrWaNumber:   'الرجاء إدخال رقم واتساب صحيح',
+        smErrZoneAr:     'الرجاء إدخال منطقة التوصيل بالعربية',
+        smErrZoneFr:     'الرجاء إدخال منطقة التوصيل بالفرنسية',
+        toastSettingsUpdated: 'تم حفظ الإعدادات',
+      },
+      fr: {
+        dir: 'ltr', lang: 'fr',
+        'admin-brand-sub':        'Tableau de bord',
+        'admin-version-tag':      'Gestion des produits, catégories, offres, commandes et paramètres — Partie 2 / Étape 6',
+        'nav-label-home':         'Accueil',
+        'nav-label-products':     'Produits',
+        'nav-label-categories':   'Catégories',
+        'nav-label-offers':       'Offres',
+        'nav-label-orders':       'Commandes',
+        'nav-label-settings':     'Paramètres',
+        'home-subtitle':          'Un aperçu rapide de votre boutique',
+        'home-cat-breakdown-title':'Répartition des produits par catégorie',
+        'home-note-text':         'Ce tableau de bord n\'est que la base. L\'ajout, la modification et la suppression pour chaque section arriveront dans les prochaines parties de cette phase.',
+        'products-subtitle':      'Vue en lecture seule de tous les produits actuels du site',
+        'products-panel-title':   'Tous les produits',
+        'categories-subtitle':    'Catégories actuelles du menu',
+        'categories-panel-title': 'Catégories',
+        'categories-note-text':   'Ces modifications sont enregistrées uniquement dans ce navigateur (localStorage) et ne modifient pas encore le site client.',
+        'offers-subtitle-admin':  'Offres actuellement affichées aux clients',
+        'offers-panel-title':     'Offres',
+        'orders-subtitle':        'Suivi des commandes clients',
+        'orders-warn-text':       'Aucun système réel d\'enregistrement des commandes n\'existe encore — les commandes arrivent aujourd\'hui uniquement via WhatsApp. Le tableau ci-dessous est une démonstration uniquement.',
+        'orders-panel-title':     'Commandes de démonstration',
+        'settings-subtitle':      'Paramètres actuels de la boutique — modifiables',
+        'settings-panel-title':   'Paramètres de la boutique',
+        'settings-note-text':     'Ces modifications sont enregistrées uniquement dans ce navigateur (localStorage) et ne modifient pas encore le site client.',
+        'pill-live-1': 'En direct — données du site',
+        'pill-live-2': 'En direct — données du site',
+        'pill-live-3': 'En direct — données du site',
+        'pill-live-4': 'En direct — valeurs réelles du site',
+        'pill-demo-2': 'Entièrement démo',
+        statTotalProducts: 'Total produits',
+        statActiveOffers:  'Offres actives',
+        statTodayOrders:   'Commandes du jour',
+        statPendingOrders: 'Commandes en attente',
+        thCategory: 'Catégorie', thName: 'Produit', thPrice: 'Prix', thStatus: 'Statut',
+        thCustomer: 'Client', thItem: 'Commande', thTotal: 'Total',
+        statusAvailable: 'Disponible', statusPlaceholder: 'Temporaire',
+        statusEnabled: 'Activée', statusDisabled: 'Désactivée',
+        statusPending: 'En attente', statusPreparing: 'En préparation', statusDone: 'Terminée',
+        offerFrom: 'au lieu de', itemsLabel: 'article',
+        settingsDeliveryFee: 'Frais de livraison', settingsDeliveryFeeHint: 'Ajoutés automatiquement si la livraison est choisie dans le panier',
+        settingsWaNumber: 'Numéro WhatsApp de la boutique', settingsWaNumberHint: 'Numéro utilisé par le bouton d\'envoi de commande',
+        settingsZone: 'Zone de livraison', settingsZoneHint: 'Hors de cette zone, seul le retrait sur place est proposé',
+        /* Phase 5 Part 2 — Step 2: Product management */
+        'products-note-text':      'Ces modifications sont enregistrées uniquement dans ce navigateur (localStorage) et ne modifient pas encore le site client.',
+        'btn-add-product-label':   'Ajouter un produit',
+        'btn-reset-products-label':'Réinitialiser',
+        'pm-label-category':       'Catégorie',
+        'pm-label-emoji':          'Emoji',
+        'pm-label-name-ar':        'Nom (arabe)',
+        'pm-label-name-fr':        'Nom (français)',
+        'pm-label-desc-ar':        'Description (arabe)',
+        'pm-label-desc-fr':        'Description (français)',
+        'pm-label-placeholder-chk':'Prix pas encore confirmé (produit temporaire)',
+        'pm-label-price':          'Prix (DA)',
+        'pm-price-hint':           'Si le produit a plusieurs tailles (ex : tacos), ce champ modifie uniquement le prix de base — les tailles existantes restent inchangées.',
+        'pm-label-available-chk':  'Disponible à la commande',
+        'pm-label-featured-chk':   'Populaire (mis en avant)',
+        'pm-btn-cancel':           'Annuler',
+        'pm-btn-save':             'Enregistrer',
+        pmAddTitle:      'Ajouter un produit',
+        pmEditTitle:     'Modifier le produit',
+        pmErrNameAr:     'Veuillez entrer le nom en arabe',
+        pmErrNameFr:     'Veuillez entrer le nom en français',
+        pmErrPrice:      'Veuillez entrer un prix valide',
+        pmErrCategory:   'Veuillez choisir une catégorie',
+        pmDeleteConfirm: 'Voulez-vous vraiment supprimer ce produit ? Cette action est irréversible.',
+        toastAdded:      'Produit ajouté',
+        toastUpdated:    'Produit mis à jour',
+        toastDeleted:    'Produit supprimé',
+        emojiPlaceholder:'🍔',
+        /* Phase 5 Part 2 — Step 3: Category management */
+        'btn-add-category-label':   'Ajouter une catégorie',
+        'btn-reset-categories-label':'Réinitialiser',
+        'cm-label-name-ar':          'Nom (arabe)',
+        'cm-label-name-fr':          'Nom (français)',
+        'cm-label-emoji':            'Emoji',
+        'cm-label-enabled-chk':      'Catégorie activée',
+        'cm-enabled-hint':           'Les catégories désactivées restent enregistrées avec leurs produits mais s\'affichent comme désactivées dans le tableau de bord.',
+        'cm-btn-cancel':             'Annuler',
+        'cm-btn-save':               'Enregistrer',
+        cmAddTitle:      'Ajouter une catégorie',
+        cmEditTitle:     'Modifier la catégorie',
+        cmErrNameAr:     'Veuillez entrer le nom en arabe',
+        cmErrNameFr:     'Veuillez entrer le nom en français',
+        cmDeleteConfirm: 'Voulez-vous vraiment supprimer cette catégorie ? Cette action est irréversible.',
+        cmDeleteBlocked: 'Impossible de supprimer cette catégorie : elle contient {count} produit(s). Veuillez d\'abord déplacer ou supprimer ses produits.',
+        toastCategoryAdded:    'Catégorie ajoutée',
+        toastCategoryUpdated:  'Catégorie mise à jour',
+        toastCategoryDeleted:  'Catégorie supprimée',
+        toastCategoryEnabled:  'Catégorie activée',
+        toastCategoryDisabled: 'Catégorie désactivée',
+        /* Phase 5 Part 2 — Step 4: Offer management */
+        'pill-live-5':                'En direct — données du site',
+        'offers-note-text':           'Ces modifications sont enregistrées uniquement dans ce navigateur (localStorage) et ne modifient pas encore le site client. Les offres marquées « Démo » sont des exemples illustratifs uniquement.',
+        'btn-add-offer-label':        'Ajouter une offre',
+        'btn-reset-offers-label':     'Réinitialiser',
+        'om-label-emoji':             'Emoji (image provisoire)',
+        'om-label-linked-category':   'Catégorie liée (optionnel)',
+        'om-label-name-ar':           'Nom (arabe)',
+        'om-label-name-fr':           'Nom (français)',
+        'om-label-desc-ar':           'Description (arabe)',
+        'om-label-desc-fr':           'Description (français)',
+        'om-label-original-price':    'Prix original (DA)',
+        'om-label-price':             'Prix de l\'offre (DA)',
+        'om-discount-hint':           'Le pourcentage de réduction est calculé automatiquement à partir du prix original et du prix de l\'offre.',
+        'om-label-demo-chk':          'Offre de démonstration (pour illustration uniquement)',
+        'om-label-available-chk':     'Offre activée',
+        'om-btn-cancel':              'Annuler',
+        'om-btn-save':                'Enregistrer',
+        omAddTitle:      'Ajouter une offre',
+        omEditTitle:     'Modifier l\'offre',
+        omErrNameAr:     'Veuillez entrer le nom en arabe',
+        omErrNameFr:     'Veuillez entrer le nom en français',
+        omErrPrice:      'Veuillez entrer un prix d\'offre valide',
+        omErrOriginalPrice: 'Veuillez entrer le prix original',
+        omErrOriginalLessThanPrice: 'Le prix original doit être supérieur ou égal au prix de l\'offre',
+        omDeleteConfirm: 'Voulez-vous vraiment supprimer cette offre ? Cette action est irréversible.',
+        toastOfferAdded:    'Offre ajoutée',
+        toastOfferUpdated:  'Offre mise à jour',
+        toastOfferDeleted:  'Offre supprimée',
+        toastOfferEnabled:  'Offre activée',
+        toastOfferDisabled: 'Offre désactivée',
+        /* Phase 5 Part 2 — Step 5: Orders management */
+        'btn-reset-orders-label':  'Réinitialiser',
+        'orders-note-text':        'Les changements de statut sont enregistrés uniquement dans ce navigateur (localStorage), à titre de démonstration — aucun système de commande réel n\'est encore connecté.',
+        statusCancelled: 'Annulée',
+        orderFilterAll: 'Tous les statuts',
+        orderSearchPlaceholder: 'Rechercher par nom, téléphone ou n° commande…',
+        methodPickup: 'Retrait',
+        methodDelivery: 'Livraison',
+        thItems: 'Produits',
+        thMethod: 'Mode',
+        thOrderId: 'N° Commande',
+        ordmTitle: 'Détails de la commande',
+        ordmSectionCustomer: 'Informations client',
+        ordmSectionItems: 'Produits',
+        ordmLabelStatus: 'Statut de la commande',
+        ordmLabelAddress: 'Adresse',
+        ordmLabelSubtotal: 'Sous-total',
+        ordmLabelDelivery: 'Frais de livraison',
+        ordmLabelTotal: 'Total',
+        ordmHint: 'Le changement de statut est enregistré localement uniquement (démonstration) et n\'envoie aucune notification réelle au client.',
+        ordmBtnClose: 'Fermer',
+        toastOrderStatusUpdated: 'Statut de la commande mis à jour',
+        ordersEmptySearch: 'Aucune commande ne correspond à votre recherche.',
+        /* Phase 5 Part 2 — Step 6: Settings CRUD */
+        'btn-reset-settings-label':  'Réinitialiser',
+        'btn-edit-settings-label':   'Modifier les paramètres',
+        'sm-label-delivery-fee':     'Frais de livraison (DA)',
+        'sm-hint-delivery-fee':      'Ajoutés automatiquement si la livraison est choisie dans le panier',
+        'sm-label-wa-number':        'Numéro WhatsApp de la boutique',
+        'sm-hint-wa-number':         'Numéro utilisé par le bouton d\'envoi de commande',
+        'sm-label-zone-ar':          'Zone de livraison (arabe)',
+        'sm-label-zone-fr':          'Zone de livraison (français)',
+        'sm-hint-zone':              'Hors de cette zone, seul le retrait sur place est proposé',
+        'sm-btn-cancel':             'Annuler',
+        'sm-btn-save':               'Enregistrer',
+        smModalTitle:    'Modifier les paramètres',
+        smErrFee:        'Veuillez entrer des frais de livraison valides (0 ou plus)',
+        smErrWaNumber:   'Veuillez entrer un numéro WhatsApp valide',
+        smErrZoneAr:     'Veuillez entrer la zone de livraison en arabe',
+        smErrZoneFr:     'Veuillez entrer la zone de livraison en français',
+        toastSettingsUpdated: 'Paramètres enregistrés',
+      },
+    };
+
+    let currentAdminLang = 'ar';
+    let currentView = 'home';
+
+    function fmtDA(n) { return n + ' DA'; }
+
+    /* ---- Renderers (data → markup), re-run on every language switch ---- */
+    function renderStatCards() {
+      const t = adminT[currentAdminLang];
+      const cards = [
+        { icon: 'grid', value: totalProducts(), label: t.statTotalProducts, pill: 'live' },
+        { icon: 'percent', value: activeOffersCount(), label: t.statActiveOffers, pill: 'live' },
+        { icon: 'orders', value: todayOrdersCount(), label: t.statTodayOrders, pill: 'demo' },
+        { icon: 'pending', value: pendingOrdersCount(), label: t.statPendingOrders, pill: 'demo' },
+      ];
+      const icons = {
+        grid: '<rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/>',
+        percent: '<line x1="19" y1="5" x2="5" y2="19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/>',
+        orders: '<path d="M9 2h6a1 1 0 0 1 1 1v1h1a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h1V3a1 1 0 0 1 1-1z"/><line x1="8" y1="11" x2="16" y2="11"/><line x1="8" y1="15" x2="16" y2="15"/>',
+        pending: '<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>',
+      };
+      const pillMarkup = (kind) => kind === 'live'
+        ? `<span class="data-pill data-pill--live">${currentAdminLang === 'fr' ? 'En direct' : 'مباشر'}</span>`
+        : `<span class="data-pill data-pill--demo">${currentAdminLang === 'fr' ? 'Démo' : 'تجريبي'}</span>`;
+
+      document.getElementById('stat-grid').innerHTML = cards.map(c => `
+        <div class="stat-card">
+          <div class="stat-card__top">
+            <div class="stat-card__icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${icons[c.icon]}</svg>
+            </div>
+            ${pillMarkup(c.pill)}
+          </div>
+          <span class="stat-card__value">${c.value}</span>
+          <span class="stat-card__label">${c.label}</span>
+        </div>`).join('');
+    }
+
+    function renderCategoryBreakdown() {
+      const isFr = currentAdminLang === 'fr';
+      const rows = sortedCategories().map(c => {
+        const count = categoryCount(c.id);
+        const disabledTag = c.enabled === false ? `<span class="status-pill status-pill--placeholder" style="margin-inline-start:0.5rem;">${isFr ? 'Désactivée' : 'معطّلة'}</span>` : '';
+        return `
+        <div class="settings-row" style="${c.enabled === false ? 'opacity:0.6;' : ''}">
+          <div style="display:flex;align-items:center;gap:0.6rem;">
+            <span style="font-size:1.2rem;">${c.emoji}</span>
+            <span class="settings-row__label">${isFr ? c.nameFr : c.nameAr}</span>
+            ${disabledTag}
+          </div>
+          <span class="settings-row__value">${count} ${isFr ? (adminT.fr.itemsLabel + (count > 1 ? 's' : '')) : 'عنصر'}</span>
+        </div>`;
+      }).join('');
+      document.getElementById('home-cat-breakdown').innerHTML = rows;
+    }
+
+    /* ---- Price display helper: single price, or a min–max range for
+       products with multiple sizes (e.g. tacos M/L) — mirrors how
+       index.html's getDisplayPrice()/size tags present pricing. ---- */
+    function productPriceDisplay(p) {
+      if (p.isPlaceholder || p.basePrice === null || p.basePrice === undefined) return null;
+      if (p.sizes && p.sizes.length > 1) {
+        const prices = p.sizes.map(s => s.price);
+        const lo = Math.min(...prices), hi = Math.max(...prices);
+        return lo === hi ? `${lo} DA` : `${lo}–${hi} DA`;
+      }
+      return `${p.basePrice} DA`;
+    }
+
+    function renderProductsTable() {
+      const isFr = currentAdminLang === 'fr';
+      const t = adminT[currentAdminLang];
+      const catName = (id) => { const c = categoryMeta(id); return c ? (isFr ? c.nameFr : c.nameAr) : id; };
+      const sorted = [...PRODUCTS].sort((a, b) => {
+        if (a.category !== b.category) return a.category.localeCompare(b.category);
+        return (a.order || 0) - (b.order || 0);
+      });
+      const rowsHtml = sorted.map(p => {
+        const priceText = productPriceDisplay(p);
+        const editLabel = isFr ? 'Modifier' : 'تعديل';
+        const deleteLabel = isFr ? 'Supprimer' : 'حذف';
+        return `
+        <tr>
+          <td>${catName(p.category)}</td>
+          <td>${p.emoji || ''} ${isFr ? p.nameFr : p.nameAr}</td>
+          <td class="admin-table__price">${priceText === null ? `<span class="admin-table__muted">${isFr ? 'Prix à confirmer' : 'قيد التأكيد'}</span>` : priceText}</td>
+          <td>${p.isPlaceholder
+            ? `<span class="status-pill status-pill--placeholder">${t.statusPlaceholder}</span>`
+            : `<span class="status-pill status-pill--available">${t.statusAvailable}</span>`}</td>
+          <td>
+            <div class="row-actions">
+              <button class="row-action-btn" onclick="openProductModal('${p.id}')" aria-label="${editLabel}" title="${editLabel}">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+              </button>
+              <button class="row-action-btn danger" onclick="deleteProductConfirm('${p.id}')" aria-label="${deleteLabel}" title="${deleteLabel}">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/></svg>
+              </button>
+            </div>
+          </td>
+        </tr>`;
+      }).join('');
+      document.getElementById('products-table').innerHTML = `
+        <thead><tr><th>${t.thCategory}</th><th>${t.thName}</th><th>${t.thPrice}</th><th>${t.thStatus}</th><th>${isFr ? 'Actions' : 'إجراءات'}</th></tr></thead>
+        <tbody>${rowsHtml}</tbody>`;
+    }
+
+    function renderCategoriesList() {
+      const isFr = currentAdminLang === 'fr';
+      const t = adminT[currentAdminLang];
+      const list = sortedCategories();
+      const editLabel = isFr ? 'Modifier' : 'تعديل';
+      const deleteLabel = isFr ? 'Supprimer' : 'حذف';
+      const moveUpLabel = isFr ? 'Monter' : 'تحريك للأعلى';
+      const moveDownLabel = isFr ? 'Descendre' : 'تحريك للأسفل';
+      const enableLabel = isFr ? 'Désactiver' : 'تعطيل';
+      const disableLabel = isFr ? 'Activer' : 'تفعيل';
+      const html = list.map((c, idx) => {
+        const count = categoryCount(c.id);
+        const isEnabled = c.enabled !== false;
+        const statusPill = isEnabled
+          ? `<span class="status-pill status-pill--available">${t.statusEnabled}</span>`
+          : `<span class="status-pill status-pill--placeholder">${t.statusDisabled}</span>`;
+        const upDisabled = idx === 0 ? 'disabled' : '';
+        const downDisabled = idx === list.length - 1 ? 'disabled' : '';
+        return `
+        <div class="mini-card" style="${isEnabled ? '' : 'opacity:0.65;'}">
+          <div class="mini-card__top">
+            <span class="mini-card__emoji" style="background:var(--gray-50);">${c.emoji}</span>
+            <span class="mini-card__name">${isFr ? c.nameFr : c.nameAr}</span>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:0.5rem;">
+            <span class="mini-card__meta">${count} ${isFr ? (adminT.fr.itemsLabel + (count > 1 ? 's' : '')) : 'عنصر'}</span>
+            ${statusPill}
+          </div>
+          <div class="row-actions" style="margin-top:0.3rem;flex-wrap:wrap;">
+            <button class="row-action-btn" ${upDisabled} onclick="moveCategory('${c.id}', -1)" aria-label="${moveUpLabel}" title="${moveUpLabel}">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>
+            </button>
+            <button class="row-action-btn" ${downDisabled} onclick="moveCategory('${c.id}', 1)" aria-label="${moveDownLabel}" title="${moveDownLabel}">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></svg>
+            </button>
+            <button class="row-action-btn" onclick="toggleCategoryEnabled('${c.id}')" aria-label="${isEnabled ? enableLabel : disableLabel}" title="${isEnabled ? enableLabel : disableLabel}">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${isEnabled ? '<path d="M17 12H7"/><circle cx="12" cy="12" r="10"/>' : '<polyline points="9 12 12 15 17 9"/><circle cx="12" cy="12" r="10"/>'}</svg>
+            </button>
+            <button class="row-action-btn" onclick="openCategoryModal('${c.id}')" aria-label="${editLabel}" title="${editLabel}">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            </button>
+            <button class="row-action-btn danger" onclick="deleteCategoryConfirm('${c.id}')" aria-label="${deleteLabel}" title="${deleteLabel}">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/></svg>
+            </button>
+          </div>
+        </div>`;
+      }).join('');
+      document.getElementById('categories-list').innerHTML = html;
+    }
+
+    function renderOffersList() {
+      const isFr = currentAdminLang === 'fr';
+      const t = adminT[currentAdminLang];
+      const editLabel = isFr ? 'Modifier' : 'تعديل';
+      const deleteLabel = isFr ? 'Supprimer' : 'حذف';
+      const enableLabel = isFr ? 'Désactiver' : 'تعطيل';
+      const disableLabel = isFr ? 'Activer' : 'تفعيل';
+      const list = sortedOffers();
+      if (!list.length) {
+        document.getElementById('offers-list').innerHTML = `
+          <p class="admin-page-subtitle" style="padding:1.3rem;margin:0;">${isFr ? 'Aucune offre pour le moment.' : 'لا توجد عروض حالياً.'}</p>`;
+        return;
+      }
+      const html = list.map(o => {
+        const isEnabled = o.available !== false;
+        const discount = offerDiscountPercent(o);
+        const cat = o.linkedCategory ? categoryMeta(o.linkedCategory) : null;
+        const catTag = cat ? `<span class="mini-card__meta">${isFr ? 'Catégorie' : 'الفئة'}: ${cat.emoji} ${isFr ? cat.nameFr : cat.nameAr}</span>` : '';
+        const demoPill = o.isDemoOffer
+          ? `<span class="data-pill data-pill--demo">${isFr ? 'Démo' : 'تجريبي'}</span>`
+          : `<span class="data-pill data-pill--live">${isFr ? 'Réel' : 'حقيقي'}</span>`;
+        const statusPill = isEnabled
+          ? `<span class="status-pill status-pill--available">${t.statusEnabled}</span>`
+          : `<span class="status-pill status-pill--placeholder">${t.statusDisabled}</span>`;
+        const discountBadge = discount ? `<span class="status-pill status-pill--preparing">-${discount}%</span>` : '';
+        return `
+        <div class="mini-card" style="${isEnabled ? '' : 'opacity:0.65;'}">
+          <div class="mini-card__top">
+            <span class="mini-card__emoji" style="background:${o.gradient || 'var(--gray-50)'};">${o.emoji || '🎁'}</span>
+            <span class="mini-card__name">${isFr ? o.nameFr : o.nameAr}</span>
+          </div>
+          <div class="mini-card__price-row">
+            ${discount ? `<span class="mini-card__price-orig">${fmtDA(o.originalPrice)}</span>` : ''}
+            <span class="mini-card__price-now">${fmtDA(o.basePrice)}</span>
+            ${discountBadge}
+          </div>
+          ${catTag}
+          <div style="display:flex;align-items:center;gap:0.4rem;flex-wrap:wrap;">
+            ${demoPill}
+            ${statusPill}
+          </div>
+          <div class="row-actions" style="margin-top:0.3rem;flex-wrap:wrap;">
+            <button class="row-action-btn" onclick="toggleOfferEnabled('${o.id}')" aria-label="${isEnabled ? enableLabel : disableLabel}" title="${isEnabled ? enableLabel : disableLabel}">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${isEnabled ? '<path d="M17 12H7"/><circle cx="12" cy="12" r="10"/>' : '<polyline points="9 12 12 15 17 9"/><circle cx="12" cy="12" r="10"/>'}</svg>
+            </button>
+            <button class="row-action-btn" onclick="openOfferModal('${o.id}')" aria-label="${editLabel}" title="${editLabel}">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            </button>
+            <button class="row-action-btn danger" onclick="deleteOfferConfirm('${o.id}')" aria-label="${deleteLabel}" title="${deleteLabel}">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/></svg>
+            </button>
+          </div>
+        </div>`;
+      }).join('');
+      document.getElementById('offers-list').innerHTML = html;
+    }
+
+    function renderOrdersTable() {
+      const isFr = currentAdminLang === 'fr';
+      const t = adminT[currentAdminLang];
+      const statusMeta = {
+        pending:   { cls: 'status-pill--pending',   label: t.statusPending },
+        preparing: { cls: 'status-pill--preparing', label: t.statusPreparing },
+        done:      { cls: 'status-pill--done',      label: t.statusDone },
+        cancelled: { cls: 'status-pill--cancelled', label: t.statusCancelled },
+      };
+      const viewLabel = isFr ? 'Voir' : 'عرض';
+      const list = filteredOrders();
+
+      let rowsHtml;
+      if (!list.length) {
+        rowsHtml = `<tr><td colspan="7" style="text-align:center;color:var(--gray-400);padding:1.5rem;">${t.ordersEmptySearch}</td></tr>`;
+      } else {
+        rowsHtml = list.map(o => {
+          const name = isFr ? o.customerFr : o.customerAr;
+          const total = orderTotal(o);
+          const methodTag = o.method === 'delivery'
+            ? `<span class="method-tag method-tag--delivery">🛵 ${t.methodDelivery}</span>`
+            : `<span class="method-tag method-tag--pickup">🏪 ${t.methodPickup}</span>`;
+          const statusOptions = Object.keys(statusMeta).map(s =>
+            `<option value="${s}" ${o.status === s ? 'selected' : ''}>${statusMeta[s].label}</option>`).join('');
+          return `
+          <tr>
+            <td>
+              <div style="font-weight:700;">${o.id}</div>
+              <div class="admin-table__muted">${formatOrderDate(o.createdAt)}</div>
+            </td>
+            <td>
+              <div>${name}</div>
+              <div class="admin-table__muted">${o.phone}</div>
+            </td>
+            <td>${orderItemsSummary(o, isFr)}</td>
+            <td>${methodTag}</td>
+            <td class="admin-table__price">${fmtDA(total)}</td>
+            <td>
+              <select class="pm-select" style="min-height:36px;padding:0.35rem 0.5rem;font-size:0.8rem;"
+                      onchange="updateOrderStatus('${o.id}', this.value)" aria-label="${t.ordmLabelStatus}">
+                ${statusOptions}
+              </select>
+            </td>
+            <td>
+              <div class="row-actions">
+                <button class="row-action-btn" onclick="openOrderModal('${o.id}')" aria-label="${viewLabel}" title="${viewLabel}">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                </button>
+              </div>
+            </td>
+          </tr>`;
+        }).join('');
+      }
+
+      document.getElementById('orders-table').innerHTML = `
+        <thead><tr>
+          <th>${t.thOrderId}</th>
+          <th>${t.thCustomer}</th>
+          <th>${t.thItems}</th>
+          <th>${t.thMethod}</th>
+          <th>${t.thTotal}</th>
+          <th>${t.thStatus}</th>
+          <th>${isFr ? 'Actions' : 'إجراءات'}</th>
+        </tr></thead>
+        <tbody>${rowsHtml}</tbody>`;
+    }
+
+    /* ---- Search / filter handlers ---- */
+    function onOrderSearchInput(value) {
+      orderSearchQuery = value;
+      renderOrdersTable();
+    }
+    function onOrderStatusFilterChange(value) {
+      orderStatusFilter = value;
+      renderOrdersTable();
+    }
+    function renderOrderStatusFilterOptions() {
+      const sel = document.getElementById('order-status-filter');
+      if (!sel) return;
+      const t = adminT[currentAdminLang];
+      const opts = [
+        { value: 'all',       label: t.orderFilterAll },
+        { value: 'pending',   label: t.statusPending },
+        { value: 'preparing', label: t.statusPreparing },
+        { value: 'done',      label: t.statusDone },
+        { value: 'cancelled', label: t.statusCancelled },
+      ];
+      sel.innerHTML = opts.map(o =>
+        `<option value="${o.value}" ${o.value === orderStatusFilter ? 'selected' : ''}>${o.label}</option>`).join('');
+    }
+
+    /* ---- Status update — shared by the table's quick-select and the
+       order detail modal's select. The ONLY mutation allowed on ORDERS. ---- */
+    function updateOrderStatus(orderId, newStatus) {
+      const o = ORDERS.find(x => x.id === orderId);
+      if (!o || o.status === newStatus) return;
+      o.status = newStatus;
+      saveOrders();
+      renderAllDynamicContent();
+      const t = pmT();
+      showAdminToast(t.toastOrderStatusUpdated);
+    }
+
+    /* ---- Order detail modal ---- */
+    function openOrderModal(orderId) {
+      const o = ORDERS.find(x => x.id === orderId);
+      if (!o) return;
+      const isFr = currentAdminLang === 'fr';
+      const t = adminT[currentAdminLang];
+      const name = isFr ? o.customerFr : o.customerAr;
+      const subtotal = orderSubtotal(o);
+      const total = orderTotal(o);
+
+      const statusLabels = {
+        pending: t.statusPending, preparing: t.statusPreparing,
+        done: t.statusDone, cancelled: t.statusCancelled,
+      };
+      const statusOptions = Object.keys(statusLabels).map(s =>
+        `<option value="${s}" ${o.status === s ? 'selected' : ''}>${statusLabels[s]}</option>`).join('');
+
+      const methodTag = o.method === 'delivery'
+        ? `<span class="method-tag method-tag--delivery">🛵 ${t.methodDelivery}</span>`
+        : `<span class="method-tag method-tag--pickup">🏪 ${t.methodPickup}</span>`;
+
+      const itemsRows = o.items.map(it => {
+        const n = isFr ? it.nameFr : it.nameAr;
+        return `
+          <div class="settings-row" style="padding:0.55rem 0;">
+            <div style="display:flex;align-items:center;gap:0.5rem;">
+              <span style="font-size:1.1rem;">${it.emoji}</span>
+              <span class="settings-row__label">${n} × ${it.qty}</span>
+            </div>
+            <span class="settings-row__value">${fmtDA(it.unitPrice * it.qty)}</span>
+          </div>`;
+      }).join('');
+
+      const addressRow = (o.method === 'delivery' && o.address)
+        ? `<div class="settings-row"><span class="settings-row__label">${t.ordmLabelAddress}</span><span class="settings-row__value">${o.address}</span></div>`
+        : '';
+      const feeRow = o.deliveryFee
+        ? `<div class="settings-row"><span class="settings-row__label">${t.ordmLabelDelivery}</span><span class="settings-row__value">${fmtDA(o.deliveryFee)}</span></div>`
+        : '';
+
+      document.getElementById('ordm-title').textContent = `${t.ordmTitle} — ${o.id}`;
+      document.getElementById('ordm-body').innerHTML = `
+        <div class="pm-field">
+          <label class="pm-label" for="ordm-status-select">${t.ordmLabelStatus}</label>
+          <select class="pm-select" id="ordm-status-select" onchange="updateOrderStatus('${o.id}', this.value)">
+            ${statusOptions}
+          </select>
+          <span class="pm-hint">${t.ordmHint}</span>
+        </div>
+        <div class="pm-field">
+          <span class="pm-label">${t.ordmSectionCustomer}</span>
+          <div class="admin-panel" style="margin-bottom:0;">
+            <div class="settings-row"><span class="settings-row__label">${name}</span><span class="settings-row__value">${o.phone}</span></div>
+            <div class="settings-row">${methodTag}<span class="admin-table__muted">${formatOrderDate(o.createdAt)}</span></div>
+            ${addressRow}
+          </div>
+        </div>
+        <div class="pm-field">
+          <span class="pm-label">${t.ordmSectionItems}</span>
+          <div class="admin-panel" style="margin-bottom:0;">${itemsRows}</div>
+        </div>
+        <div class="pm-field">
+          <div class="admin-panel" style="margin-bottom:0;">
+            <div class="settings-row"><span class="settings-row__label">${t.ordmLabelSubtotal}</span><span class="settings-row__value">${fmtDA(subtotal)}</span></div>
+            ${feeRow}
+            <div class="settings-row"><span class="settings-row__label" style="font-weight:800;color:var(--green-900);">${t.ordmLabelTotal}</span><span class="settings-row__value" style="font-size:1.05rem;">${fmtDA(total)}</span></div>
+          </div>
+        </div>
+      `;
+
+      document.getElementById('ordm-overlay').classList.add('open');
+      document.body.style.overflow = 'hidden';
+      document.getElementById('ordm-overlay').focus();
+    }
+
+    function closeOrderModal() {
+      document.getElementById('ordm-overlay').classList.remove('open');
+      document.body.style.overflow = '';
+    }
+
+    function renderSettingsRows() {
+      const isFr = currentAdminLang === 'fr';
+      const t = adminT[currentAdminLang];
+      /* Read from the live SETTINGS store (not the static DEFAULT_SETTINGS) so
+         edits made via the modal are immediately visible without a page reload. */
+      const rows = [
+        { label: t.settingsDeliveryFee, hint: t.settingsDeliveryFeeHint, value: fmtDA(SETTINGS.deliveryFee) },
+        { label: t.settingsWaNumber,    hint: t.settingsWaNumberHint,    value: SETTINGS.waNumber },
+        { label: t.settingsZone,        hint: t.settingsZoneHint,        value: isFr ? SETTINGS.deliveryZone.fr : SETTINGS.deliveryZone.ar },
+      ];
+      document.getElementById('settings-rows').innerHTML = rows.map(r => `
+        <div class="settings-row">
+          <div>
+            <div class="settings-row__label">${r.label}</div>
+            <div class="settings-row__hint">${r.hint}</div>
+          </div>
+          <span class="settings-row__value">${r.value}</span>
+        </div>`).join('');
+    }
+
+    function renderAllDynamicContent() {
+      renderStatCards();
+      renderCategoryBreakdown();
+      renderProductsTable();
+      renderCategoriesList();
+      renderOffersList();
+      renderOrdersTable();
+      renderSettingsRows();
+    }
+
+    /* ================================================
+       PRODUCT MODAL — ADD / EDIT (Phase 5 Part 2 — Step 2)
+    ================================================ */
+    let pmEditingId = null; /* null = adding a new product; otherwise the id being edited */
+
+    function pmT() { return adminT[currentAdminLang]; }
+
+    function populateCategorySelect(selectedId) {
+      const sel = document.getElementById('pm-category');
+      const isFr = currentAdminLang === 'fr';
+      const isFrLabel = isFr ? 'Désactivée' : 'معطّلة';
+      sel.innerHTML = sortedCategories().map(c =>
+        `<option value="${c.id}" ${c.id === selectedId ? 'selected' : ''}>${c.emoji} ${isFr ? c.nameFr : c.nameAr}${c.enabled === false ? ' (' + isFrLabel + ')' : ''}</option>`
+      ).join('');
+    }
+
+    function pmClearErrors() {
+      ['pm-name-ar', 'pm-name-fr', 'pm-price', 'pm-category'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.classList.remove('error');
+      });
+      ['pm-err-name-ar', 'pm-err-name-fr', 'pm-err-price'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) { el.textContent = ''; el.classList.remove('visible'); }
+      });
+    }
+
+    function onPmPlaceholderChange() {
+      const isPlaceholder = document.getElementById('pm-placeholder').checked;
+      const priceWrap = document.getElementById('pm-price-wrap');
+      const priceInput = document.getElementById('pm-price');
+      priceWrap.style.opacity = isPlaceholder ? '0.5' : '1';
+      priceInput.disabled = isPlaceholder;
+    }
+
+    function openProductModal(productId) {
+      pmEditingId = productId;
+      const t = pmT();
+      const isFr = currentAdminLang === 'fr';
+      pmClearErrors();
+
+      document.getElementById('pm-title').textContent = productId ? t.pmEditTitle : t.pmAddTitle;
+
+      let p = null;
+      if (productId) p = PRODUCTS.find(x => x.id === productId) || null;
+
+      populateCategorySelect(p ? p.category : (sortedCategories()[0] ? sortedCategories()[0].id : ''));
+
+      document.getElementById('pm-emoji').value = p ? (p.emoji || '') : '';
+      document.getElementById('pm-name-ar').value = p ? p.nameAr : '';
+      document.getElementById('pm-name-fr').value = p ? p.nameFr : '';
+      document.getElementById('pm-desc-ar').value = p ? (p.descriptionAr || '') : '';
+      document.getElementById('pm-desc-fr').value = p ? (p.descriptionFr || '') : '';
+
+      const isPlaceholder = p ? !!p.isPlaceholder : false;
+      document.getElementById('pm-placeholder').checked = isPlaceholder;
+
+      const priceInput = document.getElementById('pm-price');
+      if (p && p.sizes && p.sizes.length > 1) {
+        priceInput.value = p.basePrice != null ? p.basePrice : (p.sizes[0] ? p.sizes[0].price : '');
+      } else {
+        priceInput.value = (p && p.basePrice != null) ? p.basePrice : '';
+      }
+      onPmPlaceholderChange();
+
+      document.getElementById('pm-available').checked = p ? (p.available !== false) : true;
+      document.getElementById('pm-featured').checked = p ? !!p.featured : false;
+
+      document.getElementById('pm-overlay').classList.add('open');
+      document.body.style.overflow = 'hidden';
+      document.getElementById('pm-overlay').focus();
+    }
+
+    function closeProductModal() {
+      document.getElementById('pm-overlay').classList.remove('open');
+      document.body.style.overflow = '';
+      pmEditingId = null;
+    }
+
+    function slugify(str) {
+      return (str || '')
+        .toString()
+        .normalize('NFKD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .toLowerCase()
+        .trim()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '') || 'product';
+    }
+
+    function generateProductId(nameFr) {
+      const base = slugify(nameFr);
+      let candidate = base;
+      let i = 2;
+      const existingIds = new Set(PRODUCTS.map(p => p.id));
+      while (existingIds.has(candidate)) {
+        candidate = `${base}-${i}`;
+        i++;
+      }
+      return candidate;
+    }
+
+    function submitProductForm() {
+      const t = pmT();
+      pmClearErrors();
+      let valid = true;
+
+      const category = document.getElementById('pm-category').value;
+      const emoji = document.getElementById('pm-emoji').value.trim();
+      const nameAr = document.getElementById('pm-name-ar').value.trim();
+      const nameFr = document.getElementById('pm-name-fr').value.trim();
+      const descriptionAr = document.getElementById('pm-desc-ar').value.trim();
+      const descriptionFr = document.getElementById('pm-desc-fr').value.trim();
+      const isPlaceholder = document.getElementById('pm-placeholder').checked;
+      const available = document.getElementById('pm-available').checked;
+      const featured = document.getElementById('pm-featured').checked;
+      const priceRaw = document.getElementById('pm-price').value;
+
+      if (!category) valid = false; /* select always has a value from CATEGORIES, defensive only */
+
+      if (!nameAr) {
+        document.getElementById('pm-err-name-ar').textContent = t.pmErrNameAr;
+        document.getElementById('pm-err-name-ar').classList.add('visible');
+        document.getElementById('pm-name-ar').classList.add('error');
+        valid = false;
+      }
+      if (!nameFr) {
+        document.getElementById('pm-err-name-fr').textContent = t.pmErrNameFr;
+        document.getElementById('pm-err-name-fr').classList.add('visible');
+        document.getElementById('pm-name-fr').classList.add('error');
+        valid = false;
+      }
+
+      let basePrice = null;
+      if (!isPlaceholder) {
+        const n = parseFloat(priceRaw);
+        if (priceRaw === '' || isNaN(n) || n < 0) {
+          document.getElementById('pm-err-price').textContent = t.pmErrPrice;
+          document.getElementById('pm-err-price').classList.add('visible');
+          document.getElementById('pm-price').classList.add('error');
+          valid = false;
+        } else {
+          basePrice = n;
+        }
+      }
+
+      if (!valid) return;
+
+      if (pmEditingId) {
+        /* Editing — update fields, preserve id/sizes/addons/order unless
+           the product had multiple sizes, in which case editing the single
+           price field updates the base reference price only (per the
+           on-screen hint) rather than destroying the size breakdown. */
+        const existing = PRODUCTS.find(p => p.id === pmEditingId);
+        if (existing) {
+          existing.category = category;
+          existing.emoji = emoji;
+          existing.nameAr = nameAr;
+          existing.nameFr = nameFr;
+          existing.descriptionAr = descriptionAr;
+          existing.descriptionFr = descriptionFr;
+          existing.isPlaceholder = isPlaceholder;
+          existing.available = available;
+          existing.featured = featured;
+          existing.basePrice = isPlaceholder ? null : basePrice;
+        }
+        saveProducts();
+        renderAllDynamicContent();
+        showAdminToast(t.toastUpdated);
+      } else {
+        const maxOrder = PRODUCTS.filter(p => p.category === category).reduce((m, p) => Math.max(m, p.order || 0), 0);
+        const newProduct = {
+          id: generateProductId(nameFr),
+          category, emoji, nameAr, nameFr, descriptionAr, descriptionFr,
+          basePrice: isPlaceholder ? null : basePrice,
+          sizes: [], addons: [],
+          available, featured, isPlaceholder,
+          order: maxOrder + 1,
+        };
+        PRODUCTS.push(newProduct);
+        saveProducts();
+        renderAllDynamicContent();
+        showAdminToast(t.toastAdded);
+      }
+
+      closeProductModal();
+    }
+
+    function deleteProductConfirm(productId) {
+      const t = pmT();
+      if (!window.confirm(t.pmDeleteConfirm)) return;
+      PRODUCTS = PRODUCTS.filter(p => p.id !== productId);
+      saveProducts();
+      renderAllDynamicContent();
+      showAdminToast(t.toastDeleted);
+    }
+
+    /* ================================================
+       CATEGORY MODAL — ADD / EDIT (Phase 5 Part 2 — Step 3)
+       Mirrors the product modal's open/close/submit/validate
+       pattern exactly (same field-error/toast conventions),
+       scoped to the category's own field set.
+    ================================================ */
+    let cmEditingId = null; /* null = adding a new category; otherwise the id being edited */
+
+    function cmClearErrors() {
+      ['cm-name-ar', 'cm-name-fr'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.classList.remove('error');
+      });
+      ['cm-err-name-ar', 'cm-err-name-fr'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) { el.textContent = ''; el.classList.remove('visible'); }
+      });
+    }
+
+    function openCategoryModal(categoryId) {
+      cmEditingId = categoryId;
+      const t = pmT();
+      cmClearErrors();
+
+      document.getElementById('cm-title').textContent = categoryId ? t.cmEditTitle : t.cmAddTitle;
+
+      let c = null;
+      if (categoryId) c = CATEGORIES.find(x => x.id === categoryId) || null;
+
+      document.getElementById('cm-emoji').value = c ? (c.emoji || '') : '';
+      document.getElementById('cm-name-ar').value = c ? c.nameAr : '';
+      document.getElementById('cm-name-fr').value = c ? c.nameFr : '';
+      document.getElementById('cm-enabled').checked = c ? (c.enabled !== false) : true;
+
+      document.getElementById('cm-overlay').classList.add('open');
+      document.body.style.overflow = 'hidden';
+      document.getElementById('cm-overlay').focus();
+    }
+
+    function closeCategoryModal() {
+      document.getElementById('cm-overlay').classList.remove('open');
+      document.body.style.overflow = '';
+      cmEditingId = null;
+    }
+
+    function generateCategoryId(nameFr) {
+      const base = slugify(nameFr);
+      let candidate = base;
+      let i = 2;
+      const existingIds = new Set(CATEGORIES.map(c => c.id));
+      while (existingIds.has(candidate)) {
+        candidate = `${base}-${i}`;
+        i++;
+      }
+      return candidate;
+    }
+
+    function submitCategoryForm() {
+      const t = pmT();
+      cmClearErrors();
+      let valid = true;
+
+      const emoji = document.getElementById('cm-emoji').value.trim();
+      const nameAr = document.getElementById('cm-name-ar').value.trim();
+      const nameFr = document.getElementById('cm-name-fr').value.trim();
+      const enabled = document.getElementById('cm-enabled').checked;
+
+      if (!nameAr) {
+        document.getElementById('cm-err-name-ar').textContent = t.cmErrNameAr;
+        document.getElementById('cm-err-name-ar').classList.add('visible');
+        document.getElementById('cm-name-ar').classList.add('error');
+        valid = false;
+      }
+      if (!nameFr) {
+        document.getElementById('cm-err-name-fr').textContent = t.cmErrNameFr;
+        document.getElementById('cm-err-name-fr').classList.add('visible');
+        document.getElementById('cm-name-fr').classList.add('error');
+        valid = false;
+      }
+
+      if (!valid) return;
+
+      if (cmEditingId) {
+        /* Editing — the id is never changed here, since PRODUCTS.category
+           values already reference it; only display fields + enabled
+           state are mutable. Order/gradient are untouched by this form
+           (reordering has its own dedicated up/down controls). */
+        const existing = CATEGORIES.find(c => c.id === cmEditingId);
+        if (existing) {
+          existing.emoji = emoji;
+          existing.nameAr = nameAr;
+          existing.nameFr = nameFr;
+          existing.enabled = enabled;
+        }
+        saveCategories();
+        renderAllDynamicContent();
+        showAdminToast(t.toastCategoryUpdated);
+      } else {
+        const maxOrder = CATEGORIES.reduce((m, c) => Math.max(m, c.order || 0), 0);
+        const gradient = CATEGORY_GRADIENT_PALETTE[CATEGORIES.length % CATEGORY_GRADIENT_PALETTE.length];
+        const newCategory = {
+          id: generateCategoryId(nameFr),
+          emoji, nameAr, nameFr, gradient,
+          enabled, order: maxOrder + 1,
+        };
+        CATEGORIES.push(newCategory);
+        saveCategories();
+        renderAllDynamicContent();
+        showAdminToast(t.toastCategoryAdded);
+      }
+
+      closeCategoryModal();
+    }
+
+    function deleteCategoryConfirm(categoryId) {
+      const t = pmT();
+      const count = categoryCount(categoryId);
+      if (count > 0) {
+        window.alert(t.cmDeleteBlocked.replace('{count}', count));
+        return;
+      }
+      if (!window.confirm(t.cmDeleteConfirm)) return;
+      CATEGORIES = CATEGORIES.filter(c => c.id !== categoryId);
+      saveCategories();
+      renderAllDynamicContent();
+      showAdminToast(t.toastCategoryDeleted);
+    }
+
+    function moveCategory(categoryId, direction) {
+      /* direction: -1 = up (earlier), 1 = down (later). Swaps `order`
+         with the adjacent category in the currently sorted list, so
+         repeated clicks step through the list one position at a time. */
+      const list = sortedCategories();
+      const idx = list.findIndex(c => c.id === categoryId);
+      const swapIdx = idx + direction;
+      if (idx === -1 || swapIdx < 0 || swapIdx >= list.length) return;
+      const a = CATEGORIES.find(c => c.id === list[idx].id);
+      const b = CATEGORIES.find(c => c.id === list[swapIdx].id);
+      const tmp = a.order;
+      a.order = b.order;
+      b.order = tmp;
+      saveCategories();
+      renderAllDynamicContent();
+    }
+
+    function toggleCategoryEnabled(categoryId) {
+      const c = CATEGORIES.find(x => x.id === categoryId);
+      if (!c) return;
+      c.enabled = c.enabled === false ? true : false;
+      saveCategories();
+      renderAllDynamicContent();
+      const t = pmT();
+      showAdminToast(c.enabled ? t.toastCategoryEnabled : t.toastCategoryDisabled);
+    }
+
+    /* ================================================
+       OFFER MODAL — ADD / EDIT (Phase 5 Part 2 — Step 4)
+       Mirrors the product/category modal's open/close/submit/
+       validate pattern exactly (same field-error/toast
+       conventions), scoped to the offer's own field set.
+    ================================================ */
+    let omEditingId = null; /* null = adding a new offer; otherwise the id being edited */
+
+    function omClearErrors() {
+      ['om-name-ar', 'om-name-fr', 'om-price', 'om-original-price'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.classList.remove('error');
+      });
+      ['om-err-name-ar', 'om-err-name-fr', 'om-err-price', 'om-err-original-price'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) { el.textContent = ''; el.classList.remove('visible'); }
+      });
+    }
+
+    function populateLinkedCategorySelect(selectedId) {
+      const sel = document.getElementById('om-linked-category');
+      const isFr = currentAdminLang === 'fr';
+      const noneLabel = isFr ? 'Aucune' : 'بدون';
+      const options = [`<option value="">${noneLabel}</option>`].concat(
+        sortedCategories().map(c => `<option value="${c.id}" ${c.id === selectedId ? 'selected' : ''}>${c.emoji} ${isFr ? c.nameFr : c.nameAr}</option>`)
+      );
+      sel.innerHTML = options.join('');
+    }
+
+    function openOfferModal(offerId) {
+      omEditingId = offerId;
+      const t = pmT();
+      omClearErrors();
+
+      document.getElementById('om-title').textContent = offerId ? t.omEditTitle : t.omAddTitle;
+
+      let o = null;
+      if (offerId) o = OFFERS.find(x => x.id === offerId) || null;
+
+      populateLinkedCategorySelect(o ? (o.linkedCategory || '') : '');
+
+      document.getElementById('om-emoji').value = o ? (o.emoji || '') : '';
+      document.getElementById('om-name-ar').value = o ? o.nameAr : '';
+      document.getElementById('om-name-fr').value = o ? o.nameFr : '';
+      document.getElementById('om-desc-ar').value = o ? (o.descriptionAr || '') : '';
+      document.getElementById('om-desc-fr').value = o ? (o.descriptionFr || '') : '';
+      document.getElementById('om-price').value = (o && o.basePrice != null) ? o.basePrice : '';
+      document.getElementById('om-original-price').value = (o && o.originalPrice != null) ? o.originalPrice : '';
+      document.getElementById('om-demo').checked = o ? !!o.isDemoOffer : true;
+      document.getElementById('om-available').checked = o ? (o.available !== false) : true;
+
+      document.getElementById('om-overlay').classList.add('open');
+      document.body.style.overflow = 'hidden';
+      document.getElementById('om-overlay').focus();
+    }
+
+    function closeOfferModal() {
+      document.getElementById('om-overlay').classList.remove('open');
+      document.body.style.overflow = '';
+      omEditingId = null;
+    }
+
+    function generateOfferId(nameFr) {
+      const base = 'offer-' + slugify(nameFr);
+      let candidate = base;
+      let i = 2;
+      const existingIds = new Set(OFFERS.map(o => o.id));
+      while (existingIds.has(candidate)) {
+        candidate = `${base}-${i}`;
+        i++;
+      }
+      return candidate;
+    }
+
+    function submitOfferForm() {
+      const t = pmT();
+      omClearErrors();
+      let valid = true;
+
+      const emoji = document.getElementById('om-emoji').value.trim();
+      const linkedCategory = document.getElementById('om-linked-category').value || null;
+      const nameAr = document.getElementById('om-name-ar').value.trim();
+      const nameFr = document.getElementById('om-name-fr').value.trim();
+      const descriptionAr = document.getElementById('om-desc-ar').value.trim();
+      const descriptionFr = document.getElementById('om-desc-fr').value.trim();
+      const priceRaw = document.getElementById('om-price').value;
+      const originalPriceRaw = document.getElementById('om-original-price').value;
+      const isDemoOffer = document.getElementById('om-demo').checked;
+      const available = document.getElementById('om-available').checked;
+
+      if (!nameAr) {
+        document.getElementById('om-err-name-ar').textContent = t.omErrNameAr;
+        document.getElementById('om-err-name-ar').classList.add('visible');
+        document.getElementById('om-name-ar').classList.add('error');
+        valid = false;
+      }
+      if (!nameFr) {
+        document.getElementById('om-err-name-fr').textContent = t.omErrNameFr;
+        document.getElementById('om-err-name-fr').classList.add('visible');
+        document.getElementById('om-name-fr').classList.add('error');
+        valid = false;
+      }
+
+      let basePrice = null, originalPrice = null;
+      const priceNum = parseFloat(priceRaw);
+      if (priceRaw === '' || isNaN(priceNum) || priceNum < 0) {
+        document.getElementById('om-err-price').textContent = t.omErrPrice;
+        document.getElementById('om-err-price').classList.add('visible');
+        document.getElementById('om-price').classList.add('error');
+        valid = false;
+      } else {
+        basePrice = priceNum;
+      }
+
+      const originalNum = parseFloat(originalPriceRaw);
+      if (originalPriceRaw === '' || isNaN(originalNum) || originalNum < 0) {
+        document.getElementById('om-err-original-price').textContent = t.omErrOriginalPrice;
+        document.getElementById('om-err-original-price').classList.add('visible');
+        document.getElementById('om-original-price').classList.add('error');
+        valid = false;
+      } else if (valid && originalNum < basePrice) {
+        document.getElementById('om-err-original-price').textContent = t.omErrOriginalLessThanPrice;
+        document.getElementById('om-err-original-price').classList.add('visible');
+        document.getElementById('om-original-price').classList.add('error');
+        valid = false;
+      } else {
+        originalPrice = originalNum;
+      }
+
+      if (!valid) return;
+
+      if (omEditingId) {
+        /* Editing — id/gradient/order preserved; all display + pricing
+           fields updated. Discount % is never stored, only derived. */
+        const existing = OFFERS.find(o => o.id === omEditingId);
+        if (existing) {
+          existing.emoji = emoji;
+          existing.linkedCategory = linkedCategory;
+          existing.nameAr = nameAr;
+          existing.nameFr = nameFr;
+          existing.descriptionAr = descriptionAr;
+          existing.descriptionFr = descriptionFr;
+          existing.basePrice = basePrice;
+          existing.originalPrice = originalPrice;
+          existing.isDemoOffer = isDemoOffer;
+          existing.available = available;
+        }
+        saveOffers();
+        renderAllDynamicContent();
+        showAdminToast(t.toastOfferUpdated);
+      } else {
+        const maxOrder = OFFERS.reduce((m, o) => Math.max(m, o.order || 0), 0);
+        const gradient = CATEGORY_GRADIENT_PALETTE[OFFERS.length % CATEGORY_GRADIENT_PALETTE.length];
+        const newOffer = {
+          id: generateOfferId(nameFr),
+          emoji, gradient, linkedCategory, nameAr, nameFr, descriptionAr, descriptionFr,
+          basePrice, originalPrice, isDemoOffer, available,
+          order: maxOrder + 1,
+        };
+        OFFERS.push(newOffer);
+        saveOffers();
+        renderAllDynamicContent();
+        showAdminToast(t.toastOfferAdded);
+      }
+
+      closeOfferModal();
+    }
+
+    function deleteOfferConfirm(offerId) {
+      const t = pmT();
+      if (!window.confirm(t.omDeleteConfirm)) return;
+      OFFERS = OFFERS.filter(o => o.id !== offerId);
+      saveOffers();
+      renderAllDynamicContent();
+      showAdminToast(t.toastOfferDeleted);
+    }
+
+    function toggleOfferEnabled(offerId) {
+      const o = OFFERS.find(x => x.id === offerId);
+      if (!o) return;
+      o.available = o.available === false ? true : false;
+      saveOffers();
+      renderAllDynamicContent();
+      const t = pmT();
+      showAdminToast(o.available ? t.toastOfferEnabled : t.toastOfferDisabled);
+    }
+
+    /* ================================================
+       SETTINGS MODAL — EDIT (Phase 5 Part 2 — Step 6)
+       A single modal edits all three settings at once:
+       delivery fee, WhatsApp number, and delivery zone (AR+FR).
+       Mirrors the product/category/offer modal's open/close/
+       submit/validate pattern (same field-error/toast conventions).
+       No add/delete: settings are a fixed set of three fields —
+       only their values are editable.
+    ================================================ */
+
+    function smClearErrors() {
+      ['sm-delivery-fee', 'sm-wa-number', 'sm-zone-ar', 'sm-zone-fr'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.classList.remove('error');
+      });
+      ['sm-err-delivery-fee', 'sm-err-wa-number', 'sm-err-zone-ar', 'sm-err-zone-fr'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) { el.textContent = ''; el.classList.remove('visible'); }
+      });
+    }
+
+    function openSettingsModal() {
+      const t = pmT();
+      smClearErrors();
+
+      document.getElementById('sm-title').textContent = t.smModalTitle;
+
+      /* Pre-populate fields from the live SETTINGS store */
+      document.getElementById('sm-delivery-fee').value  = SETTINGS.deliveryFee;
+      document.getElementById('sm-wa-number').value     = SETTINGS.waNumber;
+      document.getElementById('sm-zone-ar').value       = SETTINGS.deliveryZone.ar;
+      document.getElementById('sm-zone-fr').value       = SETTINGS.deliveryZone.fr;
+
+      document.getElementById('sm-overlay').classList.add('open');
+      document.body.style.overflow = 'hidden';
+      document.getElementById('sm-overlay').focus();
+    }
+
+    function closeSettingsModal() {
+      document.getElementById('sm-overlay').classList.remove('open');
+      document.body.style.overflow = '';
+    }
+
+    function submitSettingsForm() {
+      const t = pmT();
+      smClearErrors();
+      let valid = true;
+
+      const feeRaw     = document.getElementById('sm-delivery-fee').value;
+      const waNumber   = document.getElementById('sm-wa-number').value.trim();
+      const zoneAr     = document.getElementById('sm-zone-ar').value.trim();
+      const zoneFr     = document.getElementById('sm-zone-fr').value.trim();
+
+      /* Validate delivery fee — must be a non-negative number */
+      const feeNum = parseFloat(feeRaw);
+      if (feeRaw === '' || isNaN(feeNum) || feeNum < 0) {
+        const errEl = document.getElementById('sm-err-delivery-fee');
+        if (errEl) { errEl.textContent = t.smErrFee; errEl.classList.add('visible'); }
+        document.getElementById('sm-delivery-fee').classList.add('error');
+        valid = false;
+      }
+
+      /* Validate WhatsApp number — must be non-empty */
+      if (!waNumber) {
+        const errEl = document.getElementById('sm-err-wa-number');
+        if (errEl) { errEl.textContent = t.smErrWaNumber; errEl.classList.add('visible'); }
+        document.getElementById('sm-wa-number').classList.add('error');
+        valid = false;
+      }
+
+      /* Validate delivery zone AR */
+      if (!zoneAr) {
+        const errEl = document.getElementById('sm-err-zone-ar');
+        if (errEl) { errEl.textContent = t.smErrZoneAr; errEl.classList.add('visible'); }
+        document.getElementById('sm-zone-ar').classList.add('error');
+        valid = false;
+      }
+
+      /* Validate delivery zone FR */
+      if (!zoneFr) {
+        const errEl = document.getElementById('sm-err-zone-fr');
+        if (errEl) { errEl.textContent = t.smErrZoneFr; errEl.classList.add('visible'); }
+        document.getElementById('sm-zone-fr').classList.add('error');
+        valid = false;
+      }
+
+      if (!valid) return;
+
+      /* All valid — persist */
+      SETTINGS.deliveryFee          = feeNum;
+      SETTINGS.waNumber             = waNumber;
+      SETTINGS.deliveryZone.ar      = zoneAr;
+      SETTINGS.deliveryZone.fr      = zoneFr;
+      saveSettings();
+      renderAllDynamicContent();
+      showAdminToast(t.toastSettingsUpdated);
+      closeSettingsModal();
+    }
+
+    /* ---- Admin toast ---- */
+    let adminToastTimer = null;
+    function showAdminToast(msg) {
+      const toast = document.getElementById('admin-toast');
+      if (!toast) return;
+      toast.textContent = msg;
+      toast.classList.add('show');
+      clearTimeout(adminToastTimer);
+      adminToastTimer = setTimeout(() => toast.classList.remove('show'), 2400);
+    }
+
+    /* Close product modal on overlay click / Escape */
+    document.getElementById('pm-overlay').addEventListener('click', function (e) {
+      if (e.target === this) closeProductModal();
+    });
+    document.getElementById('cm-overlay').addEventListener('click', function (e) {
+      if (e.target === this) closeCategoryModal();
+    });
+    document.getElementById('om-overlay').addEventListener('click', function (e) {
+      if (e.target === this) closeOfferModal();
+    });
+    document.getElementById('ordm-overlay').addEventListener('click', function (e) {
+      if (e.target === this) closeOrderModal();
+    });
+    document.getElementById('sm-overlay').addEventListener('click', function (e) {
+      if (e.target === this) closeSettingsModal();
+    });
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && document.getElementById('pm-overlay').classList.contains('open')) {
+        closeProductModal();
+      }
+      if (e.key === 'Escape' && document.getElementById('cm-overlay').classList.contains('open')) {
+        closeCategoryModal();
+      }
+      if (e.key === 'Escape' && document.getElementById('om-overlay').classList.contains('open')) {
+        closeOfferModal();
+      }
+      if (e.key === 'Escape' && document.getElementById('ordm-overlay').classList.contains('open')) {
+        closeOrderModal();
+      }
+      if (e.key === 'Escape' && document.getElementById('sm-overlay').classList.contains('open')) {
+        closeSettingsModal();
+      }
+    });
+
+    /* ---- View switching ---- */
+    const viewTitleKey = {
+      home: 'nav-label-home', products: 'nav-label-products', categories: 'nav-label-categories',
+      offers: 'nav-label-offers', orders: 'nav-label-orders', settings: 'nav-label-settings',
+    };
+
+    function switchView(view) {
+      currentView = view;
+      document.querySelectorAll('.admin-view').forEach(el => el.classList.toggle('active', el.id === 'view-' + view));
+      document.querySelectorAll('.admin-nav__btn').forEach(btn => btn.classList.toggle('active', btn.dataset.view === view));
+      const t = adminT[currentAdminLang];
+      document.getElementById('admin-topbar-title').textContent = t[viewTitleKey[view]];
+      closeDrawer();
+      document.getElementById('admin-content-scroll-anchor');
+      window.scrollTo({ top: 0, behavior: 'auto' });
+    }
+
+    /* ---- Mobile drawer ---- */
+    function openDrawer() {
+      document.getElementById('admin-sidebar').classList.add('open');
+      document.getElementById('admin-backdrop').classList.add('open');
+    }
+    function closeDrawer() {
+      document.getElementById('admin-sidebar').classList.remove('open');
+      document.getElementById('admin-backdrop').classList.remove('open');
+    }
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeDrawer(); });
+
+    /* ---- Language switching (mirrors index.html's setLang pattern,
+       with its own localStorage key so it never touches the
+       customer site's saved language) ---- */
+    function setAdminLang(lang) {
+      currentAdminLang = lang;
+      const t = adminT[lang];
+      const html = document.documentElement;
+      html.setAttribute('lang', t.lang);
+      html.setAttribute('dir', t.dir);
+      document.body.classList.toggle('lang-fr', lang === 'fr');
+      document.body.classList.toggle('lang-ar', lang === 'ar');
+
+      Object.entries(t).forEach(([id, value]) => {
+        if (['dir', 'lang'].includes(id) || !id.match(/^[a-z0-9-]+$/i) || id.indexOf('-') === -1) return;
+        const el = document.getElementById(id);
+        if (el) el.textContent = value;
+      });
+
+      document.getElementById('admin-btn-ar').classList.toggle('active', lang === 'ar');
+      document.getElementById('admin-btn-fr').classList.toggle('active', lang === 'fr');
+      document.getElementById('admin-btn-ar').setAttribute('aria-pressed', lang === 'ar');
+      document.getElementById('admin-btn-fr').setAttribute('aria-pressed', lang === 'fr');
+
+      const orderSearchInput = document.getElementById('order-search-input');
+      if (orderSearchInput) orderSearchInput.placeholder = t.orderSearchPlaceholder;
+      renderOrderStatusFilterOptions();
+
+      try { localStorage.setItem('cv_admin_lang', lang); } catch (e) {}
+
+      document.getElementById('admin-topbar-title').textContent = t[viewTitleKey[currentView]];
+      renderAllDynamicContent();
+    }
+
+    /* ---- Init ---- */
+    /* init() is called by cvInitDashboard() after successful authentication */
+    function init() {
+      loadCategories();
+      loadProducts();
+      loadOffers();
+      loadOrders();
+      loadSettings();
+      let saved = null;
+      try { saved = localStorage.getItem('cv_admin_lang'); } catch (e) {}
+      setAdminLang(saved === 'fr' ? 'fr' : 'ar');
+      switchView('home');
+    }
+
+    /* ================================================
+       ADMIN AUTHENTICATION  (Phase 6 — Step 6)
+       Runs before init(). Shows the login overlay if no
+       valid JWT is found in sessionStorage. On successful
+       login the overlay is dismissed and init() runs.
+
+       Token storage: sessionStorage (not localStorage) —
+       cleared automatically when the browser tab is closed.
+       Token key: 'cv_admin_token'
+
+       Bilingual: login UI strings are defined here and
+       applied by cvApplyLoginLang() which is also called
+       by setAdminLang() so language switching works even
+       on the login screen.
+    ================================================ */
+
+    const CV_TOKEN_KEY = 'cv_admin_token';
+
+    const cvLoginT = {
+      ar: {
+        title:    'كازا فيردي — لوحة التحكم',
+        subtitle: 'أدخل بيانات الدخول للمتابعة',
+        labelUser:'اسم المستخدم',
+        labelPass:'كلمة المرور',
+        btnLabel: 'دخول',
+        btnLoading:'جاري التحقق…',
+        errEmpty: 'الرجاء إدخال اسم المستخدم وكلمة المرور',
+        errBadCreds:'اسم المستخدم أو كلمة المرور غير صحيحة',
+        errServer: 'خطأ في الخادم — حاول مرة أخرى',
+        errNetwork:'لا يمكن الاتصال بالخادم — تحقق من اتصالك',
+      },
+      fr: {
+        title:    'Casa Verde — Tableau de bord',
+        subtitle: 'Entrez vos identifiants pour continuer',
+        labelUser:'Nom d'utilisateur',
+        labelPass:'Mot de passe',
+        btnLabel: 'Connexion',
+        btnLoading:'Vérification…',
+        errEmpty: 'Veuillez entrer votre identifiant et mot de passe',
+        errBadCreds:'Identifiant ou mot de passe incorrect',
+        errServer: 'Erreur serveur — réessayez',
+        errNetwork:'Impossible de joindre le serveur — vérifiez votre connexion',
+      },
+    };
+
+    function cvLoginLang() {
+      return (currentAdminLang === 'fr') ? cvLoginT.fr : cvLoginT.ar;
+    }
+
+    function cvApplyLoginLang() {
+      const t = cvLoginLang();
+      const set = (id, text) => { const el = document.getElementById(id); if (el) el.textContent = text; };
+      set('cv-login-title',       t.title);
+      set('cv-login-subtitle',    t.subtitle);
+      set('cv-login-label-user',  t.labelUser);
+      set('cv-login-label-pass',  t.labelPass);
+      set('cv-login-btn-label',   t.btnLabel);
+    }
+
+    function cvShowLoginError(msg) {
+      const el = document.getElementById('cv-login-error');
+      if (!el) return;
+      el.textContent = msg;
+      el.style.display = '';
+    }
+
+    function cvHideLoginError() {
+      const el = document.getElementById('cv-login-error');
+      if (el) el.style.display = 'none';
+    }
+
+    async function cvSubmitLogin() {
+      const t        = cvLoginLang();
+      const userEl   = document.getElementById('cv-login-username');
+      const passEl   = document.getElementById('cv-login-password');
+      const btnEl    = document.getElementById('cv-login-btn');
+      const btnLabel = document.getElementById('cv-login-btn-label');
+
+      const username = (userEl ? userEl.value : '').trim();
+      const password = (passEl ? passEl.value : '').trim();
+
+      cvHideLoginError();
+
+      if (!username || !password) {
+        cvShowLoginError(t.errEmpty);
+        return;
+      }
+
+      /* Disable button while request is in flight */
+      if (btnEl) btnEl.disabled = true;
+      if (btnLabel) btnLabel.textContent = t.btnLoading;
+
+      try {
+        const res = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password }),
+        });
+
+        const data = await res.json();
+
+        if (res.ok && data.token) {
+          /* Store token and dismiss overlay */
+          try { sessionStorage.setItem(CV_TOKEN_KEY, data.token); } catch (e) {}
+          cvInitDashboard();
+        } else {
+          cvShowLoginError(data.error || t.errBadCreds);
+        }
+      } catch (err) {
+        cvShowLoginError(
+          err.message && err.message.includes('fetch')
+            ? t.errNetwork
+            : t.errServer
+        );
+      } finally {
+        if (btnEl) btnEl.disabled = false;
+        if (btnLabel) btnLabel.textContent = t.btnLabel;
+      }
+    }
+
+    function cvGetToken() {
+      try { return sessionStorage.getItem(CV_TOKEN_KEY) || ''; } catch { return ''; }
+    }
+
+    function cvLogout() {
+      try { sessionStorage.removeItem(CV_TOKEN_KEY); } catch (e) {}
+      /* Reload the page — the login overlay will appear automatically */
+      window.location.reload();
+    }
+
+    function cvInitDashboard() {
+      /* Hide login overlay */
+      const overlay = document.getElementById('cv-login-overlay');
+      if (overlay) overlay.style.display = 'none';
+      /* Run the existing dashboard init */
+      init();
+    }
+
+    /* ── Bootstrap: check for an existing valid-looking token ─────── */
+    (function cvBootstrap() {
+      const token = cvGetToken();
+
+      if (!token) {
+        /* No token — show login screen, apply language */
+        cvApplyLoginLang();
+        return; /* overlay stays visible; init() is NOT called */
+      }
+
+      /* Token exists — validate it against the server to guard against
+         a tampered or expired token in sessionStorage.
+         We use a lightweight HEAD-equivalent: call GET /api/settings
+         (admin-only 501 stub) and check for 401 vs any other response.
+         A 501 means the server accepted the auth; a 401 means the token
+         is bad/expired. */
+      fetch('/api/auth/verify', {
+        method: 'GET',
+        headers: { 'Authorization': 'Bearer ' + token },
+      }).then(function(r) {
+        if (r.status === 401) {
+          /* Token rejected — show login */
+          try { sessionStorage.removeItem(CV_TOKEN_KEY); } catch (e) {}
+          cvApplyLoginLang();
+        } else {
+          /* 200 (valid) — proceed to dashboard */
+          cvInitDashboard();
+        }
+      }).catch(function() {
+        /* Network error — fall through to dashboard anyway (offline-tolerant).
+           If the token is actually expired, protected API calls will 401
+           individually and can redirect to login at that point. */
+        cvInitDashboard();
+      });
+    })();
+  </script>
+</body>
+</html>
