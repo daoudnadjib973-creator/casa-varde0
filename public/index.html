@@ -2744,8 +2744,27 @@
       box-shadow: var(--shadow-md);
     }
     .confirm-order-btn:active { transform: translateY(0); }
-    .confirm-order-btn svg { width: 20px; height: 20px; flex-shrink: 0; }
+    
+  .confirm-order-btn svg { width: 20px; height: 20px; flex-shrink: 0; }
+ /* Fix drawer interaction in RTL/LTR */
+.cart-drawer,
+.mobile-drawer {
+  z-index: 1002;
+}
+
+.cart-overlay,
+.drawer-overlay {
+  z-index: 1000;
+}
+
+.cart-drawer__close,
+.drawer__close {
+  position: relative;
+  z-index: 1003;
+  pointer-events: auto;
+}
   </style>
+  
 </head>
 
 <body class="lang-ar" id="top">
@@ -2842,8 +2861,8 @@
 
           <!-- Language switcher -->
           <div class="lang-switcher" role="group" aria-label="Choisir la langue / اختيار اللغة">
-            <button class="lang-btn active" id="btn-ar" onclick="setLang('ar')" aria-pressed="true">ع</button>
-            <button class="lang-btn"        id="btn-fr" onclick="setLang('fr')" aria-pressed="false">Fr</button>
+            <button type="button" class="lang-btn active" id="btn-ar" onclick="setLang('ar')" aria-pressed="true">ع</button>
+            <button type="button" class="lang-btn" id="btn-fr" onclick="setLang('fr')" aria-pressed="false">Fr</button>
           </div>
 
           <!-- Cart button (Phase 3) -->
@@ -3167,7 +3186,7 @@
         <span id="cart-drawer-title">السلة</span>
         <span class="cart-drawer__count" id="cart-drawer-count" style="display:none;"></span>
       </div>
-      <button class="cart-drawer__close" onclick="closeCart()" aria-label="إغلاق السلة">
+      <button type="button" class="cart-drawer__close" onclick="event.stopPropagation(); closeCart()" aria-label="إغلاق السلة">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
         </svg>
@@ -4455,8 +4474,11 @@
     let currentLang = 'ar';
 
     function setLang(lang) {
-      currentLang = lang;
-      const t = translations[lang];
+  closeCart();
+  closeDrawer();
+
+  currentLang = lang;
+  const t = translations[lang];
       const html = document.documentElement;
 
       html.setAttribute('lang', t.lang);
