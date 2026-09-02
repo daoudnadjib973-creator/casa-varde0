@@ -1084,16 +1084,18 @@
       overflow-x: hidden;
     }
 
-    /* RTL: drawer slides from left */
+    /* Drawer direction */
 html[dir="rtl"] .mobile-drawer {
   inset-inline-start: 0;
   inset-inline-end: auto;
   transform: translateX(-100%);
 }
-    html[dir="ltr"] .mobile-drawer {
-      inset-inline-end: 0;
-      transform: translateX(100%);
-    }
+
+html[dir="ltr"] .mobile-drawer {
+  inset-inline-end: 0;
+  inset-inline-start: auto;
+  transform: translateX(100%);
+}
 
     .mobile-drawer.open {
       transform: translateX(0);
@@ -2119,19 +2121,25 @@ html[dir="rtl"] .mobile-drawer {
     }
 
     .cart-drawer {
-      position: fixed;
-      top: 0;
-      inset-inline-end: 0;
-      z-index: 351;
-      width: min(440px, 100vw);
-      height: 100dvh;
-      background: var(--white);
-      display: flex;
-      flex-direction: column;
-      transform: translateX(110%);
-      transition: transform 0.32s cubic-bezier(0.4, 0, 0.2, 1);
-      box-shadow: var(--shadow-xl);
-    }
+  position: fixed;
+  top: 0;
+  inset-inline-end: 0;
+  z-index: 351;
+  width: min(440px, 100vw);
+  height: 100dvh;
+  background: var(--white);
+  display: flex;
+  flex-direction: column;
+  transform: translateX(110%);
+  transition: transform 0.32s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: var(--shadow-xl);
+}
+
+html[dir="rtl"] .cart-drawer {
+  inset-inline-start: 0;
+  inset-inline-end: auto;
+  transform: translateX(-110%);
+}
     .cart-drawer.open {
       transform: translateX(0);
     }
