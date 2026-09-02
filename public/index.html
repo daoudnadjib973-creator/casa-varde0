@@ -1085,10 +1085,11 @@
     }
 
     /* RTL: drawer slides from left */
-    html[dir="rtl"] .mobile-drawer {
-      inset-inline-end: 0;
-      transform: translateX(100%);
-    }
+html[dir="rtl"] .mobile-drawer {
+  inset-inline-start: 0;
+  inset-inline-end: auto;
+  transform: translateX(-100%);
+}
     html[dir="ltr"] .mobile-drawer {
       inset-inline-end: 0;
       transform: translateX(100%);
