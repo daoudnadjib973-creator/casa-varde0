@@ -2755,7 +2755,51 @@ html[dir="rtl"] .cart-drawer {
     .confirm-order-btn:active { transform: translateY(0); }
     
   .confirm-order-btn svg { width: 20px; height: 20px; flex-shrink: 0; }
- 
+ /* FINAL DRAWER VISIBILITY FIX */
+
+.drawer-overlay:not(.open),
+.cart-overlay:not(.open) {
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+
+.drawer-overlay.open,
+.cart-overlay.open {
+  opacity: 1 !important;
+  visibility: visible !important;
+  pointer-events: auto !important;
+}
+
+.mobile-drawer:not(.open),
+.cart-drawer:not(.open) {
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+
+.mobile-drawer.open,
+.cart-drawer.open {
+  visibility: visible !important;
+  pointer-events: auto !important;
+}
+
+/* Hidden position — LTR */
+html[dir="ltr"] .mobile-drawer:not(.open),
+html[dir="ltr"] .cart-drawer:not(.open) {
+  transform: translateX(110%) !important;
+}
+
+/* Hidden position — RTL */
+html[dir="rtl"] .mobile-drawer:not(.open),
+html[dir="rtl"] .cart-drawer:not(.open) {
+  transform: translateX(-110%) !important;
+}
+
+/* Open state */
+.mobile-drawer.open,
+.cart-drawer.open {
+  transform: translateX(0) !important;
+}
   </style>
   
 </head>
