@@ -2795,26 +2795,59 @@ async function loadProducts() {
       if (!valid) return;
 
       if (pmEditingId) {
-        /* Editing — update fields, preserve id/sizes/addons/order unless
-           the product had multiple sizes, in which case editing the single
-           price field updates the base reference price only (per the
-           on-screen hint) rather than destroying the size breakdown. */
-        const existing = PRODUCTS.find(p => p.id === pmEditingId);
-        if (existing) {
-          existing.category = category;
-          existing.emoji = emoji;
-          existing.nameAr = nameAr;
-          existing.nameFr = nameFr;
-          existing.descriptionAr = descriptionAr;
-          existing.descriptionFr = descriptionFr;
-          existing.isPlaceholder = isPlaceholder;
-          existing.available = available;
-          existing.featured = featured;
-          existing.basePrice = isPlaceholder ? null : basePrice;
-        }
-        saveProducts();
-        renderAllDynamicContent();
-        showAdminToast(t.toastUpdated);
+  const existing = PRODUCTS.find(p => p.id === pmEditingId);
+
+  if (!existing) {
+    showAdminToast(t.toastUpdated);
+    return;
+  }
+
+  try {
+    const token = cvGetToken();
+
+    const res = await fetch('/api/products/' + encodeURIComponent(pmEditingId), {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + token
+      },
+      body: JSON.stringify({
+        category_id: category,
+        name_ar: nameAr,
+        name_fr: nameFr,
+        description_ar: descriptionAr,
+        description_fr: descriptionFr,
+        emoji: emoji,
+        base_price: isPlaceholder ? null : basePrice,
+        is_available: available,
+        is_featured: featured,
+        is_placeholder: isPlaceholder
+      })
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      throw new Error(data.error || 'Failed to update product');
+    }
+
+    await loadProducts();
+    renderAllDynamicContent();
+    showAdminToast(t.toastUpdated);
+
+  } catch (err) {
+    console.error('[Admin] Product update failed:', err);
+
+    const isFr = currentAdminLang === 'fr';
+    showAdminToast(
+      isFr
+        ? 'Échec de la mise à jour'
+        : 'فشل تحديث المنتج'
+    );
+
+    return;
+  }
+}
       } else {
         const maxOrder = PRODUCTS.filter(p => p.category === category).reduce((m, p) => Math.max(m, p.order || 0), 0);
         const newProduct = {
