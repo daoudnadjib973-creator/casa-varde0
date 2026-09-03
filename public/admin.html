@@ -1510,14 +1510,56 @@
     let PRODUCTS = [];
     const PRODUCTS_STORAGE_KEY = 'cv_admin_products';
 
-    function loadProducts() {
-      try {
-        const raw = localStorage.getItem(PRODUCTS_STORAGE_KEY);
-        if (raw) { PRODUCTS = JSON.parse(raw); return; }
-      } catch (e) {}
-      PRODUCTS = JSON.parse(JSON.stringify(DEFAULT_PRODUCTS));
-      saveProducts();
+async function loadProducts() {
+  try {
+    const token = cvGetToken();
+
+    const res = await fetch('/api/products', {
+      method: 'GET',
+      headers: {
+        'Authorization': 'Bearer ' + token
+      }
+    });
+
+    if (!res.ok) {
+      throw new Error('Failed to load products');
     }
+
+    const data = await res.json();
+
+    PRODUCTS = (data.products || []).map(p => ({
+      id: p.id,
+      category: p.category_id,
+      nameAr: p.name_ar,
+      nameFr: p.name_fr,
+      descriptionAr: p.description_ar || '',
+      descriptionFr: p.description_fr || '',
+      emoji: p.emoji || '',
+      basePrice: p.base_price,
+      sizes: p.sizes || [],
+      addons: p.addons || [],
+      available: p.is_available !== false,
+      featured: p.is_featured === true,
+      isPlaceholder: p.is_placeholder === true,
+      order: p.sort_order || 0
+    }));
+
+    return;
+  } catch (err) {
+    console.error('[Admin] Failed to load products:', err);
+
+    /* Temporary fallback if API is unavailable */
+    try {
+      const raw = localStorage.getItem(PRODUCTS_STORAGE_KEY);
+      if (raw) {
+        PRODUCTS = JSON.parse(raw);
+        return;
+      }
+    } catch (e) {}
+
+    PRODUCTS = JSON.parse(JSON.stringify(DEFAULT_PRODUCTS));
+  }
+}
     function saveProducts() {
       try { localStorage.setItem(PRODUCTS_STORAGE_KEY, JSON.stringify(PRODUCTS)); } catch (e) {}
     }
