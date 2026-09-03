@@ -2849,20 +2849,78 @@ async function loadProducts() {
   }
 }
       } else {
-        const maxOrder = PRODUCTS.filter(p => p.category === category).reduce((m, p) => Math.max(m, p.order || 0), 0);
-        const newProduct = {
-          id: generateProductId(nameFr),
-          category, emoji, nameAr, nameFr, descriptionAr, descriptionFr,
-          basePrice: isPlaceholder ? null : basePrice,
-          sizes: [], addons: [],
-          available, featured, isPlaceholder,
-          order: maxOrder + 1,
-        };
-        PRODUCTS.push(newProduct);
-        saveProducts();
-        renderAllDynamicContent();
-        showAdminToast(t.toastAdded);
-      }
+  const maxOrder = PRODUCTS
+    .filter(p => p.category === category)
+    .reduce((m, p) => Math.max(m, p.order || 0), 0);
+
+  const newProduct = {
+    id: generateProductId(nameFr),
+    category,
+    emoji,
+    nameAr,
+    nameFr,
+    descriptionAr,
+    descriptionFr,
+    basePrice: isPlaceholder ? null : basePrice,
+    sizes: [],
+    addons: [],
+    available,
+    featured,
+    isPlaceholder,
+    order: maxOrder + 1
+  };
+
+  try {
+    const token = cvGetToken();
+
+    const res = await fetch('/api/products', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + token
+      },
+      body: JSON.stringify({
+        id: newProduct.id,
+        category_id: newProduct.category,
+        name_ar: newProduct.nameAr,
+        name_fr: newProduct.nameFr,
+        description_ar: newProduct.descriptionAr,
+        description_fr: newProduct.descriptionFr,
+        emoji: newProduct.emoji,
+        base_price: newProduct.basePrice,
+        sizes: newProduct.sizes,
+        addons: newProduct.addons,
+        is_available: newProduct.available,
+        is_featured: newProduct.featured,
+        is_placeholder: newProduct.isPlaceholder,
+        sort_order: newProduct.order
+      })
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      throw new Error(data.error || 'Failed to create product');
+    }
+
+    await loadProducts();
+    renderAllDynamicContent();
+    showAdminToast(t.toastAdded);
+
+  } catch (err) {
+    console.error('[Admin] Product creation failed:', err);
+
+    const isFr = currentAdminLang === 'fr';
+
+    showAdminToast(
+      isFr
+        ? 'Échec de l’ajout du produit'
+        : 'فشل إضافة المنتج'
+    );
+
+    return;
+  }
+}
 
       closeProductModal();
     }
