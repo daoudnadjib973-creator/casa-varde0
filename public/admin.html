@@ -3392,17 +3392,19 @@ async function loadProducts() {
 
     /* ---- Init ---- */
     /* init() is called by cvInitDashboard() after successful authentication */
-    function init() {
-      loadCategories();
-      loadProducts();
-      loadOffers();
-      loadOrders();
-      loadSettings();
-      let saved = null;
-      try { saved = localStorage.getItem('cv_admin_lang'); } catch (e) {}
-      setAdminLang(saved === 'fr' ? 'fr' : 'ar');
-      switchView('home');
-    }
+    async function init() {
+  loadCategories();
+  await loadProducts();
+  loadOffers();
+  loadOrders();
+  loadSettings();
+
+  let saved = null;
+  try { saved = localStorage.getItem('cv_admin_lang'); } catch (e) {}
+
+  setAdminLang(saved === 'fr' ? 'fr' : 'ar');
+  switchView('home');
+}
 
     /* ================================================
        ADMIN AUTHENTICATION  (Phase 6 — Step 6)
