@@ -3555,7 +3555,7 @@ async function loadProducts() {
     /* ---- Init ---- */
     /* init() is called by cvInitDashboard() after successful authentication */
     async function init() {
-  loadCategories();
+  await loadCategories();
   await loadProducts();
   loadOffers();
   loadOrders();
