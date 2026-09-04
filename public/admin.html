@@ -2847,7 +2847,7 @@ async function loadProducts() {
 
     return;
   }
-      } else {
+} else {
   const maxOrder = PRODUCTS
     .filter(p => p.category === category)
     .reduce((m, p) => Math.max(m, p.order || 0), 0);
