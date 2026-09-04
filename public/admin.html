@@ -3062,103 +3062,127 @@ async function loadProducts() {
       return candidate;
     }
 
-    function submitCategoryForm() {
-      const t = pmT();
-      cmClearErrors();
-      let valid = true;
+    async function submitCategoryForm() {
+  const t = pmT();
+  cmClearErrors();
+  let valid = true;
 
-      const emoji = document.getElementById('cm-emoji').value.trim();
-      const nameAr = document.getElementById('cm-name-ar').value.trim();
-      const nameFr = document.getElementById('cm-name-fr').value.trim();
-      const enabled = document.getElementById('cm-enabled').checked;
+  const emoji   = document.getElementById('cm-emoji').value.trim();
+  const nameAr  = document.getElementById('cm-name-ar').value.trim();
+  const nameFr  = document.getElementById('cm-name-fr').value.trim();
+  const enabled = document.getElementById('cm-enabled').checked;
 
-      if (!nameAr) {
-        document.getElementById('cm-err-name-ar').textContent = t.cmErrNameAr;
-        document.getElementById('cm-err-name-ar').classList.add('visible');
-        document.getElementById('cm-name-ar').classList.add('error');
-        valid = false;
-      }
-      if (!nameFr) {
-        document.getElementById('cm-err-name-fr').textContent = t.cmErrNameFr;
-        document.getElementById('cm-err-name-fr').classList.add('visible');
-        document.getElementById('cm-name-fr').classList.add('error');
-        valid = false;
-      }
+  if (!nameAr) {
+    document.getElementById('cm-err-name-ar').textContent = t.cmErrNameAr;
+    document.getElementById('cm-err-name-ar').classList.add('visible');
+    document.getElementById('cm-name-ar').classList.add('error');
+    valid = false;
+  }
+  if (!nameFr) {
+    document.getElementById('cm-err-name-fr').textContent = t.cmErrNameFr;
+    document.getElementById('cm-err-name-fr').classList.add('visible');
+    document.getElementById('cm-name-fr').classList.add('error');
+    valid = false;
+  }
+  if (!valid) return;
 
-      if (!valid) return;
+  const token = cvGetToken();
+  const isFr  = currentAdminLang === 'fr';
 
-      if (cmEditingId) {
-        /* Editing — the id is never changed here, since PRODUCTS.category
-           values already reference it; only display fields + enabled
-           state are mutable. Order/gradient are untouched by this form
-           (reordering has its own dedicated up/down controls). */
-        const existing = CATEGORIES.find(c => c.id === cmEditingId);
-        if (existing) {
-          existing.emoji = emoji;
-          existing.nameAr = nameAr;
-          existing.nameFr = nameFr;
-          existing.enabled = enabled;
-        }
-        saveCategories();
-        renderAllDynamicContent();
-        showAdminToast(t.toastCategoryUpdated);
-      } else {
-        const maxOrder = CATEGORIES.reduce((m, c) => Math.max(m, c.order || 0), 0);
-        const gradient = CATEGORY_GRADIENT_PALETTE[CATEGORIES.length % CATEGORY_GRADIENT_PALETTE.length];
-        const newCategory = {
-          id: generateCategoryId(nameFr),
-          emoji, nameAr, nameFr, gradient,
-          enabled, order: maxOrder + 1,
-        };
-        CATEGORIES.push(newCategory);
-        saveCategories();
-        renderAllDynamicContent();
-        showAdminToast(t.toastCategoryAdded);
-      }
+  if (cmEditingId) {
+    try {
+      const res = await fetch('/api/categories/' + encodeURIComponent(cmEditingId), {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+        body: JSON.stringify({ emoji, name_ar: nameAr, name_fr: nameFr, is_enabled: enabled })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'update failed');
+      await
 
-      closeCategoryModal();
-    }
+    async function deleteCategoryConfirm(categoryId) {
+  const t    = pmT();
+  const isFr = currentAdminLang === 'fr';
+  const count = categoryCount(categoryId);
 
-    function deleteCategoryConfirm(categoryId) {
-      const t = pmT();
-      const count = categoryCount(categoryId);
-      if (count > 0) {
-        window.alert(t.cmDeleteBlocked.replace('{count}', count));
-        return;
-      }
-      if (!window.confirm(t.cmDeleteConfirm)) return;
-      CATEGORIES = CATEGORIES.filter(c => c.id !== categoryId);
-      saveCategories();
-      renderAllDynamicContent();
-      showAdminToast(t.toastCategoryDeleted);
-    }
+  if (count > 0) {
+    window.alert(t.cmDeleteBlocked.replace('{count}', count));
+    return;
+  }
+  if (!window.confirm(t.cmDeleteConfirm)) return;
 
-    function moveCategory(categoryId, direction) {
-      /* direction: -1 = up (earlier), 1 = down (later). Swaps `order`
-         with the adjacent category in the currently sorted list, so
-         repeated clicks step through the list one position at a time. */
-      const list = sortedCategories();
-      const idx = list.findIndex(c => c.id === categoryId);
-      const swapIdx = idx + direction;
-      if (idx === -1 || swapIdx < 0 || swapIdx >= list.length) return;
-      const a = CATEGORIES.find(c => c.id === list[idx].id);
-      const b = CATEGORIES.find(c => c.id === list[swapIdx].id);
-      const tmp = a.order;
-      a.order = b.order;
-      b.order = tmp;
-      saveCategories();
-      renderAllDynamicContent();
-    }
+  try {
+    const res = await fetch('/api/categories/' + encodeURIComponent(categoryId), {
+      method: 'DELETE',
+      headers: { 'Authorization': 'Bearer ' + cvGetToken() }
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'delete failed');
+    await loadCategories();
+    renderAllDynamicContent();
+    showAdminToast(t.toastCategoryDeleted);
+  } catch (err) {
+    console.error('[Admin] Category deletion failed:', err);
+    showAdminToast(isFr ? 'Échec de la suppression' : 'فشل حذف الفئة');
+  }
+}
 
-    function toggleCategoryEnabled(categoryId) {
-      const c = CATEGORIES.find(x => x.id === categoryId);
-      if (!c) return;
-      c.enabled = c.enabled === false ? true : false;
-      saveCategories();
-      renderAllDynamicContent();
-      const t = pmT();
-      showAdminToast(c.enabled ? t.toastCategoryEnabled : t.toastCategoryDisabled);
-    }
+    async function moveCategory(categoryId, direction) {
+  const list    = sortedCategories();
+  const idx     = list.findIndex(c => c.id === categoryId);
+  const swapIdx = idx + direction;
+  if (idx === -1 || swapIdx < 0 || swapIdx >= list.length) return;
+
+  const a    = CATEGORIES.find(c => c.id === list[idx].id);
+  const b    = CATEGORIES.find(c => c.id === list[swapIdx].id);
+  const isFr = currentAdminLang === 'fr';
+
+  try {
+    const token = cvGetToken();
+    const [resA, resB] = await Promise.all([
+      fetch('/api/categories/' + encodeURIComponent(a.id), {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+        body: JSON.stringify({ sort_order: b.order })
+      }),
+      fetch('/api/categories/' + encodeURIComponent(b.id), {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+        body: JSON.stringify({ sort_order: a.order })
+      })
+    ]);
+    if (!resA.ok || !resB.ok) throw new Error('reorder failed');
+    await loadCategories();
+    renderAllDynamicContent();
+  } catch (err) {
+    console.error('[Admin] Category reorder failed:', err);
+    showAdminToast(isFr ? 'Échec du réordonnancement' : 'فشل إعادة الترتيب');
+  }
+}
+
+    async function toggleCategoryEnabled(categoryId) {
+  const c    = CATEGORIES.find(x => x.id === categoryId);
+  if (!c) return;
+  const isFr     = currentAdminLang === 'fr';
+  const newState = c.enabled === false ? true : false;
+
+  try {
+    const res = await fetch('/api/categories/' + encodeURIComponent(categoryId), {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + cvGetToken() },
+      body: JSON.stringify({ is_enabled: newState })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'toggle failed');
+    await loadCategories();
+    renderAllDynamicContent();
+    const t = pmT();
+    showAdminToast(newState ? t.toastCategoryEnabled : t.toastCategoryDisabled);
+  } catch (err) {
+    console.error('[Admin] Category toggle failed:', err);
+    showAdminToast(isFr ? 'Échec de la modification' : 'فشل تعديل الفئة');
+  }
+}
 
     /* ================================================
        OFFER MODAL — ADD / EDIT (Phase 5 Part 2 — Step 4)
