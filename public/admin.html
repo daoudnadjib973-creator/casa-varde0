@@ -1436,14 +1436,53 @@
     let CATEGORIES = [];
     const CATEGORIES_STORAGE_KEY = 'cv_admin_categories';
 
-    function loadCategories() {
-      try {
-        const raw = localStorage.getItem(CATEGORIES_STORAGE_KEY);
-        if (raw) { CATEGORIES = JSON.parse(raw); return; }
-      } catch (e) {}
-      CATEGORIES = JSON.parse(JSON.stringify(DEFAULT_CATEGORIES));
-      saveCategories();
+    async function loadCategories() {
+  try {
+    const token = cvGetToken();
+
+    const res = await fetch('/api/categories', {
+      method: 'GET',
+      headers: {
+        'Authorization': 'Bearer ' + token
+      }
+    });
+
+    if (!res.ok) {
+      throw new Error('Failed to load categories');
     }
+
+    const data = await res.json();
+
+    CATEGORIES = (data.categories || []).map(c => ({
+      id: c.id,
+      emoji: c.emoji || '',
+      nameAr: c.name_ar || '',
+      nameFr: c.name_fr || '',
+      gradient: c.gradient || '',
+      enabled: c.is_enabled !== false,
+      order: c.sort_order || 0
+    }));
+
+    console.log('[Admin] Categories loaded from API:', CATEGORIES);
+
+    return;
+
+  } catch (err) {
+    console.error('[Admin] Failed to load categories:', err);
+
+    /* Fallback to localStorage if API is temporarily unavailable */
+    try {
+      const raw = localStorage.getItem(CATEGORIES_STORAGE_KEY);
+
+      if (raw) {
+        CATEGORIES = JSON.parse(raw);
+        return;
+      }
+    } catch (e) {}
+
+    CATEGORIES = JSON.parse(JSON.stringify(DEFAULT_CATEGORIES));
+  }
+}
     function saveCategories() {
       try { localStorage.setItem(CATEGORIES_STORAGE_KEY, JSON.stringify(CATEGORIES)); } catch (e) {}
     }
